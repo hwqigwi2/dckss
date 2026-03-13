@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Checker</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #3390ec; /* Голубой фон */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+    </style>
+    <!-- Подключаем официальный SDK Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 id="status-text">Загрузка...</h1>
+    </div>
+
+    <script>
+        // Ждем, когда Telegram Web App полностью загрузится и будет готов к работе
+        Telegram.WebApp.ready();
+
+        // Получаем объект с данными о пользователе. Он автоматически добавляется Telegram.
+        // Важно: данные доступны только при запуске из приложения Telegram.
+        const user = Telegram.WebApp.initDataUnsafe?.user;
+
+        // Находим элемент на странице, куда будем выводить текст
+        const statusElement = document.getElementById('status-text');
+
+        // Проверяем, удалось ли получить данные пользователя
+        if (user) {
+            // У пользователя есть поле isPremium (true или false). [citation:3][citation:6]
+            if (user.is_premium) {
+                statusElement.textContent = 'У вас есть премиум!';
+            } else {
+                statusElement.textContent = 'У вас нет премиума.';
+            }
+        } else {
+            // Это может случиться, если открыть приложение не в Telegram, например, просто в браузере.
+            statusElement.textContent = 'Не удалось определить пользователя. Запустите приложение через Telegram.';
+            // Для теста можно вывести всю информацию о себе:
+            console.log('initDataUnsafe:', Telegram.WebApp.initDataUnsafe);
+        }
+
+        // Сообщаем Telegram, что приложение отрисовано и можно скрывать нативный лоадер
+        Telegram.WebApp.expand();
+    </script>
+</body>
+</html>
