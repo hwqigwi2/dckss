@@ -4,63 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Checker</title>
+    <!-- Подключаем официальный SDK Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключаем Lottie для анимированных стикеров -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #3390ec; /* Голубой фон Telegram */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        /* Верхний блок с текстом */
+        .top-text {
+            text-align: center;
+            width: 100%;
+        }
+
+        .main-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .sub-title {
+            font-size: 17px;
+            font-weight: 400;
+            opacity: 0.8; /* прозрачность */
+            text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        /* Контейнер для стикера */
+        .sticker-container {
+            width: 180px;
+            height: 180px;
+            margin: 20px 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-color: #3390ec; /* Голубой фон */
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-            text-align: center;
         }
-        .container {
-            padding: 20px;
-        }
-        h1 {
-            font-size: 24px;
+
+        /* Кнопка */
+        .continue-button {
+            background-color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 60px;
+            font-size: 18px;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            color: #3390ec;
+            cursor: default; /* нерабочая кнопка */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.1s ease;
+            /* имитация неактивности */
+            pointer-events: none;
+            opacity: 0.9;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+
+        /* маленький отступ снизу для красоты */
+        .footer {
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
     </style>
-    <!-- Подключаем официальный SDK Telegram -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1 id="status-text">Загрузка...</h1>
+    <div class="top-text">
+        <div class="main-title" id="mainTitle">Загрузка...</div>
+        <div class="sub-title" id="subTitle"></div>
+    </div>
+
+    <div class="sticker-container" id="stickerContainer"></div>
+
+    <div class="footer">
+        <button class="continue-button" id="continueBtn">Продолжить</button>
     </div>
 
     <script>
-        // Ждем, когда Telegram Web App полностью загрузится и будет готов к работе
         Telegram.WebApp.ready();
 
-        // Получаем объект с данными о пользователе. Он автоматически добавляется Telegram.
-        // Важно: данные доступны только при запуске из приложения Telegram.
         const user = Telegram.WebApp.initDataUnsafe?.user;
+        const mainTitleEl = document.getElementById('mainTitle');
+        const subTitleEl = document.getElementById('subTitle');
+        const stickerContainer = document.getElementById('stickerContainer');
 
-        // Находим элемент на странице, куда будем выводить текст
-        const statusElement = document.getElementById('status-text');
-
-        // Проверяем, удалось ли получить данные пользователя
-        if (user) {
-            // У пользователя есть поле isPremium (true или false). [citation:3][citation:6]
-            if (user.is_premium) {
-                statusElement.textContent = 'У вас есть премиум!';
-            } else {
-                statusElement.textContent = 'У вас нет премиума.';
-            }
-        } else {
-            // Это может случиться, если открыть приложение не в Telegram, например, просто в браузере.
-            statusElement.textContent = 'Не удалось определить пользователя. Запустите приложение через Telegram.';
-            // Для теста можно вывести всю информацию о себе:
-            console.log('initDataUnsafe:', Telegram.WebApp.initDataUnsafe);
+        // Функция для генерации случайного числа дней (от 500 до 2000)
+        function getRandomDays() {
+            return Math.floor(Math.random() * 1500) + 500; // 500–1999
         }
 
-        // Сообщаем Telegram, что приложение отрисовано и можно скрывать нативный лоадер
+        // Определяем тексты в зависимости от Premium
+        if (user) {
+            if (user.is_premium) {
+                mainTitleEl.textContent = 'Telegram Premium';
+                subTitleEl.textContent = 'У тебя есть подписка, ты легенда!';
+            } else {
+                const days = getRandomDays().toLocaleString('ru-RU'); // добавляем пробелы между разрядами
+                mainTitleEl.textContent = 'Восходящая звезда!';
+                subTitleEl.textContent = `Ты присоединился(-ась) к Telegram ${days} дней назад`;
+            }
+        } else {
+            // Если открыто не в Telegram
+            mainTitleEl.textContent = 'Демо-режим';
+            subTitleEl.textContent = 'Запустите приложение через Telegram';
+        }
+
+        // Загружаем анимированный стикер с помощью Lottie
+        // Используем бесплатную анимацию звезды (можно заменить на другой стикер)
+        // Для премиум-пользователей можно загрузить другую анимацию, но для простоты возьмём одну.
+        // Если хочешь разные стикеры — ниже показано, как это сделать.
+        let animationPath = 'https://assets10.lottiefiles.com/packages/lf20_p8bfn5vc.json'; // анимированная звезда
+
+        // Если хочешь разные стикеры для премиум и обычных, раскомментируй:
+        // if (user?.is_premium) {
+        //     animationPath = 'https://assets2.lottiefiles.com/packages/lf20_zyquurfl.json'; // пример другой анимации
+        // } else {
+        //     animationPath = 'https://assets10.lottiefiles.com/packages/lf20_p8bfn5vc.json';
+        // }
+
+        lottie.loadAnimation({
+            container: stickerContainer,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            path: animationPath
+        });
+
+        // Сообщаем Telegram, что приложение готово и можно развернуть на весь экран
         Telegram.WebApp.expand();
     </script>
 </body>
