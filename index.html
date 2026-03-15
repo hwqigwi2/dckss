@@ -67,6 +67,12 @@
             border-radius: 4px;
             position: relative;
             overflow: hidden;
+            transition: background-color 0.2s;
+        }
+
+        /* Посещённый слайд (полностью белая полоска) */
+        .progress-bar.visited {
+            background-color: white;
         }
 
         /* Анимация заполнения для текущего слайда */
@@ -131,13 +137,13 @@
             flex-shrink: 0;
         }
 
-        /* Блок звёзд — регулируйте margin-bottom для изменения высоты */
+        /* Блок звёзд — теперь чуть выше кнопки */
         .stars-reward {
             font-size: 32px;
             font-weight: 700;
             line-height: 1.2;
             margin-top: 10px;
-            margin-bottom: 390px; /* ← меняйте это значение, чтобы поднять/опустить текст */
+            margin-bottom: 8px;  /* уменьшено с 30px до 8px, чтобы поднять к кнопке */
             color: rgba(255, 255, 255, 0.9);
         }
 
@@ -158,7 +164,7 @@
             background-color: white;
             border: none;
             border-radius: 30px;
-            padding: 14px 40px;
+            padding: 14px 50px;        /* увеличено с 40px до 50px */
             font-size: 18px;
             font-weight: 600;
             color: #3390ec;
@@ -167,7 +173,7 @@
                         background-color 0.2s;
             font-family: inherit;
             width: fit-content;
-            min-width: 200px;
+            min-width: 250px;           /* увеличено с 200px до 250px */
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
@@ -178,16 +184,17 @@
         }
 
         .btn.secondary {
-            background-color: transparent;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);  /* размытие фона */
             color: white;
             box-shadow: none;
             border: 1px solid rgba(255,255,255,0.5);
-            padding: 12px 40px;
+            padding: 12px 50px;          /* увеличено для соответствия */
             font-size: 16px;
         }
 
         .btn.secondary:active {
-            background-color: rgba(255,255,255,0.2);
+            background-color: rgba(255,255,255,0.25);
             transform: scale(0.95);
         }
 
@@ -215,16 +222,19 @@
 
         @media (max-width: 380px) {
             .btn {
-                padding: 12px 30px;
-                min-width: 160px;
+                padding: 12px 40px;
+                min-width: 210px;
                 font-size: 16px;
+            }
+            .btn.secondary {
+                padding: 10px 40px;
             }
             .big-number {
                 font-size: 48px;
             }
             .stars-reward {
                 font-size: 28px;
-                margin-bottom: 25px; /* и здесь подстройте при необходимости */
+                margin-bottom: 6px;
             }
             .main-text {
                 font-size: 18px;
@@ -279,6 +289,9 @@
         let currentSlide = 0;
         let autoTimer = null;
 
+        // Массив для отслеживания посещённых слайдов (при переходе вперёд)
+        let visitedSlides = [false, false, false, false];
+
         // Генерация данных
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
@@ -331,10 +344,30 @@
             });
         }
 
+        // Функция, помечающая текущий слайд как посещённый (после завершения показа или при переходе вперёд)
+        function markCurrentVisited() {
+            if (!visitedSlides[currentSlide]) {
+                visitedSlides[currentSlide] = true;
+                progressBars[currentSlide].classList.remove('active');
+                progressBars[currentSlide].classList.add('visited');
+            }
+        }
+
+        // Сброс посещённости для слайда (используется при возврате назад)
+        function unmarkVisited(index) {
+            if (visitedSlides[index]) {
+                visitedSlides[index] = false;
+                progressBars[index].classList.remove('visited');
+            }
+        }
+
+        // Очистка и установка нового таймера для автоперехода
         function resetAutoTimer() {
             if (autoTimer) clearTimeout(autoTimer);
             if (currentSlide < slides.length - 1) {
                 autoTimer = setTimeout(() => {
+                    // Перед переходом помечаем текущий слайд как посещённый
+                    markCurrentVisited();
                     currentSlide++;
                     updateSlide(currentSlide);
                 }, 5000);
@@ -352,9 +385,23 @@
             const stars = getStarsForSlide(index);
             starsRewardEl.textContent = `+${stars}`;
 
-            // Обновляем прогресс-бары: убираем активный класс у всех, добавляем текущему
+            // Обновляем прогресс-бары
+            // Сначала убираем active у всех
             progressBars.forEach(bar => bar.classList.remove('active'));
-            progressBars[index].classList.add('active');
+
+            // Устанавливаем visited для слайдов, которые есть в массиве visitedSlides
+            for (let i = 0; i < progressBars.length; i++) {
+                if (visitedSlides[i]) {
+                    progressBars[i].classList.add('visited');
+                } else {
+                    progressBars[i].classList.remove('visited');
+                }
+            }
+
+            // Если текущий слайд не посещён, добавляем ему active для анимации
+            if (!visitedSlides[index]) {
+                progressBars[index].classList.add('active');
+            }
 
             // Управление кнопкой назад
             if (index === 0) {
@@ -369,6 +416,8 @@
 
         // Обработчик кнопки "Продолжить"
         nextBtn.addEventListener('click', () => {
+            // Помечаем текущий слайд как посещённый перед переходом
+            markCurrentVisited();
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
                 updateSlide(currentSlide);
@@ -378,6 +427,8 @@
         // Обработчик кнопки "Назад"
         backBtn.addEventListener('click', () => {
             if (currentSlide > 0) {
+                // При возврате назад снимаем посещённость с текущего слайда (чтобы его полоска снова заполнялась)
+                unmarkVisited(currentSlide);
                 currentSlide--;
                 updateSlide(currentSlide);
             }
