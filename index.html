@@ -6,7 +6,7 @@
     <title>Premium Onboarding</title>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем Lottie для анимированных стикеров (JSON) -->
+    <!-- Подключаем Lottie -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         * {
@@ -18,7 +18,6 @@
         body {
             height: 100vh;
             overflow: hidden;
-            background: linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: white;
             display: flex;
@@ -27,6 +26,7 @@
             padding: 8px 16px 4px;
             position: relative;
             touch-action: pan-y pinch-zoom;
+            transition: background 0.5s ease; /* плавная смена фона */
         }
 
         #particles-canvas {
@@ -51,7 +51,6 @@
             height: 100%;
         }
 
-        /* Индикатор слайдов */
         .progress {
             display: flex;
             gap: 8px;
@@ -92,7 +91,6 @@
             to { width: 100%; }
         }
 
-        /* Слайд */
         .slide {
             display: flex;
             flex-direction: column;
@@ -128,7 +126,6 @@
             margin-bottom: 15px;
         }
 
-        /* КОНТЕЙНЕР ДЛЯ АНИМИРОВАННОГО СТИКЕРА */
         .animation-container {
             width: 270px;
             height: 270px;
@@ -138,10 +135,9 @@
             align-items: center;
         }
 
-        /* Фиксированный контейнер звёзд */
         .stars-reward {
             position: absolute;
-            bottom: 10px; /* расстояние от низа слайда — подберите под вашу кнопку */
+            bottom: 10px; /* поднято, чтобы не перекрывать анимацию */
             left: 0;
             width: 100%;
             font-size: 32px;
@@ -164,7 +160,6 @@
             display: inline-block;
         }
 
-        /* Кнопки */
         .buttons {
             display: flex;
             flex-direction: column;
@@ -252,14 +247,14 @@
             }
             .stars-reward {
                 font-size: 28px;
-                bottom: 60px;
+                bottom: 70px;
             }
             .main-text {
                 font-size: 18px;
             }
             .animation-container {
-                width: 140px;
-                height: 140px;
+                width: 200px;
+                height: 200px;
             }
         }
     </style>
@@ -279,9 +274,7 @@
             <div class="main-text" id="mainText"></div>
             <div class="big-number" id="bigNumber"></div>
             <div class="small-text" id="smallText"></div>
-            <!-- КОНТЕЙНЕР ДЛЯ АНИМИРОВАННОГО СТИКЕРА -->
             <div class="animation-container" id="animationContainer"></div>
-            <!-- Контейнер для звёзд с числом и иконкой -->
             <div class="stars-reward" id="starsReward"></div>
         </div>
 
@@ -300,7 +293,7 @@
         const mainTextEl = document.getElementById('mainText');
         const bigNumberEl = document.getElementById('bigNumber');
         const smallTextEl = document.getElementById('smallText');
-        const animationContainer = document.getElementById('animationContainer'); // для стикера
+        const animationContainer = document.getElementById('animationContainer');
         const starsRewardEl = document.getElementById('starsReward');
         const progressBars = document.querySelectorAll('.progress-bar');
         const nextBtn = document.getElementById('nextBtn');
@@ -323,12 +316,12 @@
             }
         }
 
-        // Данные слайдов (без анимации в объекте — будем выбирать по индексу)
+        // Тексты для слайдов (первый слайд теперь всегда Premium)
         const slides = [
             {
-                main: user?.is_premium ? 'Telegram Premium' : 'Восходящая звезда!',
-                big: user?.is_premium ? '' : daysInTelegram.toLocaleString('ru-RU'),
-                small: user?.is_premium ? 'У тебя есть подписка, ты легенда!' : 'дней назад'
+                main: 'Telegram Premium',
+                big: '',
+                small: 'У тебя есть подписка, ты легенда!'
             },
             {
                 main: 'Дней в Telegram',
@@ -347,27 +340,32 @@
             }
         ];
 
-        // Массив с путями к JSON-файлам для каждого слайда
+        // Массив с путями к JSON (стикеры)
         const animations = [
-            'prem.json',   // для слайда 0
-            'day.json',    // для слайда 1
-            'send.json',   // для слайда 2
-            'best.json'    // для слайда 3
+            'prem.json',   // слайд 0
+            'send.json',   // слайд 1 (был day, теперь send)
+            'day.json',    // слайд 2 (был send, теперь day)
+            'best.json'    // слайд 3
+        ];
+
+        // Градиенты для каждого слайда
+        const backgrounds = [
+            'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)', // фиолетовый
+            'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)', // жёлтый
+            'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)', // голубой (как был)
+            'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'  // оранжевый
         ];
 
         function createStarIcon() {
             const img = document.createElement('img');
-            img.src = 'star.png'; // путь к твоей PNG-звезде
+            img.src = 'star.png';
             img.alt = '★';
             img.className = 'star-icon';
             return img;
         }
 
-        // Функция загрузки Lottie-анимации
         function loadAnimation(container, path) {
-            // Очищаем контейнер
             container.innerHTML = '';
-            // Загружаем анимацию
             lottie.loadAnimation({
                 container: container,
                 renderer: 'svg',
@@ -383,17 +381,17 @@
             bigNumberEl.textContent = s.big;
             smallTextEl.textContent = s.small;
 
-            // Загружаем соответствующий JSON-стикер
+            // Меняем фон body
+            document.body.style.background = backgrounds[index];
+
             loadAnimation(animationContainer, animations[index]);
 
-            // Обновляем звёзды
             const stars = getStarsForSlide(index);
             starsRewardEl.innerHTML = '';
             const textNode = document.createTextNode(`+${stars}`);
             starsRewardEl.appendChild(textNode);
             starsRewardEl.appendChild(createStarIcon());
 
-            // Прогресс-бары
             progressBars.forEach((bar, i) => {
                 bar.classList.remove('visited', 'active');
                 if (i < index) {
@@ -403,7 +401,6 @@
                 }
             });
 
-            // Кнопка назад
             if (index === 0) {
                 backBtn.classList.add('hidden');
             } else {
@@ -492,7 +489,7 @@
         initStars();
         drawStars();
 
-        // Ripple эффект для кнопок
+        // Ripple эффект
         document.querySelectorAll('.btn').forEach(button => {
             button.addEventListener('touchstart', (e) => {
                 button.style.transform = 'scale(0.96)';
