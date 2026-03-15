@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Checker</title>
-    <!-- Подключаем официальный SDK Telegram -->
+    <title>Premium Onboarding</title>
+    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем Lottie для анимированных стикеров -->
+    <!-- Lottie для анимированных эмодзи -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         * {
@@ -17,24 +17,76 @@
 
         body {
             min-height: 100vh;
-            background-color: #3390ec; /* Голубой фон Telegram */
+            background: linear-gradient(180deg, #99ccff 0%, #3390ec 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: white;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             align-items: center;
-            padding: 40px 20px;
+            padding: 20px 20px 30px;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* Верхний блок с текстом */
-        .top-text {
-            text-align: center;
+        /* Контейнер для фоновых частиц (звёздочки) */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Основное содержимое поверх фона */
+        .content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+        }
+
+        /* Индикатор слайдов (4 полоски) */
+        .progress {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            width: 60px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .progress-bar.active {
+            background-color: white;
+        }
+
+        /* Слайд-контейнер (текст + анимация) */
+        .slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            width: 100%;
+            text-align: center;
         }
 
         .main-title {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
             text-shadow: 0 2px 6px rgba(0,0,0,0.2);
@@ -43,22 +95,32 @@
         .sub-title {
             font-size: 17px;
             font-weight: 400;
-            opacity: 0.8; /* прозрачность */
+            opacity: 0.8;
             text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            margin-bottom: 20px;
         }
 
-        /* Контейнер для стикера */
-        .sticker-container {
+        /* Контейнер для анимированного эмодзи */
+        .animation-container {
             width: 180px;
             height: 180px;
-            margin: 20px 0;
+            margin: 10px 0 20px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* Кнопка */
-        .continue-button {
+        /* Кнопки */
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn {
             background-color: white;
             border: none;
             border-radius: 30px;
@@ -66,89 +128,242 @@
             font-size: 18px;
             font-weight: 600;
             color: #3390ec;
-            cursor: default; /* нерабочая кнопка */
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.1s ease;
-            /* имитация неактивности */
-            pointer-events: none;
-            opacity: 0.9;
+            transition: transform 0.1s ease, opacity 0.2s;
             font-family: inherit;
-            margin-bottom: 10px;
+            width: fit-content;
+            min-width: 220px;
+            cursor: pointer;
         }
 
-        /* маленький отступ снизу для красоты */
-        .footer {
-            width: 100%;
-            display: flex;
-            justify-content: center;
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn.secondary {
+            background-color: transparent;
+            color: white;
+            box-shadow: none;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 12px 50px;
+            font-size: 16px;
+        }
+
+        .btn.hidden {
+            display: none;
+        }
+
+        /* Адаптация для маленьких экранов */
+        @media (max-width: 380px) {
+            .btn {
+                padding: 12px 40px;
+                min-width: 180px;
+            }
+            .main-title {
+                font-size: 28px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="top-text">
-        <div class="main-title" id="mainTitle">Загрузка...</div>
-        <div class="sub-title" id="subTitle"></div>
-    </div>
+    <canvas id="particles-canvas"></canvas>
 
-    <div class="sticker-container" id="stickerContainer"></div>
+    <div class="content">
+        <!-- Индикатор слайдов -->
+        <div class="progress" id="progress">
+            <span class="progress-bar" data-index="0"></span>
+            <span class="progress-bar" data-index="1"></span>
+            <span class="progress-bar" data-index="2"></span>
+            <span class="progress-bar" data-index="3"></span>
+        </div>
 
-    <div class="footer">
-        <button class="continue-button" id="continueBtn">Продолжить</button>
+        <!-- Слайд (динамическая часть) -->
+        <div class="slide">
+            <div class="main-title" id="mainTitle">Загрузка...</div>
+            <div class="sub-title" id="subTitle"></div>
+            <div class="animation-container" id="animationContainer"></div>
+        </div>
+
+        <!-- Кнопки навигации -->
+        <div class="buttons">
+            <button class="btn" id="nextBtn">Продолжить</button>
+            <button class="btn secondary hidden" id="backBtn">Назад</button>
+        </div>
     </div>
 
     <script>
+        // Инициализация Telegram Web App
         Telegram.WebApp.ready();
 
+        // Данные пользователя
         const user = Telegram.WebApp.initDataUnsafe?.user;
+
+        // Элементы интерфейса
         const mainTitleEl = document.getElementById('mainTitle');
         const subTitleEl = document.getElementById('subTitle');
-        const stickerContainer = document.getElementById('stickerContainer');
+        const animationContainer = document.getElementById('animationContainer');
+        const progressBars = document.querySelectorAll('.progress-bar');
+        const nextBtn = document.getElementById('nextBtn');
+        const backBtn = document.getElementById('backBtn');
 
-        // Функция для генерации случайного числа дней (от 500 до 2000)
-        function getRandomDays() {
-            return Math.floor(Math.random() * 1500) + 500; // 500–1999
-        }
+        // Текущий слайд (0-3)
+        let currentSlide = 0;
 
-        // Определяем тексты в зависимости от Premium
-        if (user) {
-            if (user.is_premium) {
-                mainTitleEl.textContent = 'Telegram Premium';
-                subTitleEl.textContent = 'У тебя есть подписка, ты легенда!';
-            } else {
-                const days = getRandomDays().toLocaleString('ru-RU'); // добавляем пробелы между разрядами
-                mainTitleEl.textContent = 'Восходящая звезда!';
-                subTitleEl.textContent = `Ты присоединился(-ась) к Telegram ${days} дней назад`;
+        // Генерация случайных данных
+        const daysInTelegram = Math.floor(Math.random() * 1500) + 500; // 500–1999
+        const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789; // 4789–23842
+
+        // Данные для слайдов
+        const slides = [
+            {
+                title: user?.is_premium ? 'Telegram Premium' : 'Восходящая звезда!',
+                subtitle: user?.is_premium 
+                    ? 'У тебя есть подписка, ты легенда!' 
+                    : `Ты присоединился(-ась) к Telegram ${daysInTelegram.toLocaleString('ru-RU')} дней назад`,
+                // Для премиум другая анимация? Пока одна, но можно менять
+                animation: 'https://lottie.host/0e7f6a3c-4b9d-4f3b-9a1a-8b5c6d7e8f12/star.json' // звезда
+            },
+            {
+                title: 'Дней в Telegram',
+                subtitle: `Ты здесь уже ${daysInTelegram.toLocaleString('ru-RU')} дней!`,
+                animation: 'https://lottie.host/7f8e9d0c-5a4b-3c2d-1e0f-9a8b7c6d5e4f/confetti.json' // конфетти
+            },
+            {
+                title: 'Сообщений отправлено',
+                subtitle: `Около ${messagesSent.toLocaleString('ru-RU')} сообщений`,
+                animation: 'https://lottie.host/9a8b7c6d-5e4f-3d2c-1b0a-9f8e7d6c5b4a/heart.json' // сердечко
+            },
+            {
+                title: 'Ты в 0.01% лучших',
+                subtitle: 'По количеству посещений в день',
+                animation: 'https://lottie.host/3a4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d/telegram_hello.json' // привет
             }
-        } else {
-            // Если открыто не в Telegram
-            mainTitleEl.textContent = 'Демо-режим';
-            subTitleEl.textContent = 'Запустите приложение через Telegram';
+        ];
+
+        // Функция загрузки Lottie-анимации
+        function loadAnimation(container, path) {
+            // Очищаем контейнер
+            container.innerHTML = '';
+            // Загружаем новую анимацию
+            lottie.loadAnimation({
+                container: container,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: path
+            });
         }
 
-        // Загружаем анимированный стикер с помощью Lottie
-        // Используем бесплатную анимацию звезды (можно заменить на другой стикер)
-        // Для премиум-пользователей можно загрузить другую анимацию, но для простоты возьмём одну.
-        // Если хочешь разные стикеры — ниже показано, как это сделать.
-        let animationPath = 'https://lottiefiles.com/free-animation/telegram-premium-by-alexander-akimov-sQIzX2d39L'; // анимированная звезда
+        // Функция обновления интерфейса в соответствии с текущим слайдом
+        function updateSlide(index) {
+            const slideData = slides[index];
+            mainTitleEl.textContent = slideData.title;
+            subTitleEl.textContent = slideData.subtitle;
+            loadAnimation(animationContainer, slideData.animation);
 
-        // Если хочешь разные стикеры для премиум и обычных, раскомментируй:
-        // if (user?.is_premium) {
-        //     animationPath = 'https://assets2.lottiefiles.com/packages/lf20_zyquurfl.json'; // пример другой анимации
-        // } else {
-        //     animationPath = 'https://assets10.lottiefiles.com/packages/lf20_p8bfn5vc.json';
-        // }
+            // Обновляем индикатор прогресса
+            progressBars.forEach((bar, i) => {
+                if (i === index) {
+                    bar.classList.add('active');
+                } else {
+                    bar.classList.remove('active');
+                }
+            });
 
-        lottie.loadAnimation({
-            container: stickerContainer,
-            renderer: 'svg',
-            loop: true,
-            autoplay: true,
-            path: animationPath
+            // Управление видимостью кнопки "Назад" (на первом слайде скрыта)
+            if (index === 0) {
+                backBtn.classList.add('hidden');
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+
+            // На последнем слайде можно изменить текст кнопки "Продолжить", но оставим "Продолжить"
+            // (можно добавить логику закрытия, но пока просто оставим)
+        }
+
+        // Обработчики кнопок
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            } else {
+                // Если это последний слайд — можно закрыть мини-апп
+                // Telegram.WebApp.close(); // раскомментируй, если нужно закрывать
+            }
         });
 
-        // Сообщаем Telegram, что приложение готово и можно развернуть на весь экран
+        backBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide(currentSlide);
+            }
+        });
+
+        // Инициализация первого слайда
+        updateSlide(0);
+
+        // ---- Фон с падающими звёздочками (Canvas) ----
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function initParticles() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const particleCount = 40;
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 3 + 1,
+                    speedY: Math.random() * 2 + 1,
+                    speedX: Math.random() * 0.5 - 0.25,
+                    opacity: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'white';
+
+            particles.forEach(p => {
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                // Рисуем звездочку (можно просто круг)
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Двигаем
+                p.y += p.speedY;
+                p.x += p.speedX;
+
+                // Сброс вверх
+                if (p.y > height + 10) {
+                    p.y = -10;
+                    p.x = Math.random() * width;
+                }
+                if (p.x > width + 10) p.x = -10;
+                if (p.x < -10) p.x = width + 10;
+            });
+
+            requestAnimationFrame(drawParticles);
+        }
+
+        window.addEventListener('resize', () => {
+            initParticles();
+        });
+
+        initParticles();
+        drawParticles();
+
+        // Сообщаем Telegram, что приложение готово
         Telegram.WebApp.expand();
     </script>
 </body>
 </html>
-
