@@ -126,10 +126,10 @@
             margin-bottom: 15px;
         }
 
-        /* Фиксированный контейнер звёзд — всегда над кнопками */
+        /* Фиксированный контейнер звёзд — теперь flex для размещения текста и иконки */
         .stars-reward {
             position: absolute;
-            bottom: 10px; /* расстояние от низа слайда — подберите под вашу кнопку */
+            bottom: 70px; /* расстояние от низа слайда — подберите под вашу кнопку */
             left: 0;
             width: 100%;
             font-size: 32px;
@@ -139,6 +139,18 @@
             text-align: center;
             pointer-events: none; /* чтобы не мешал нажатию кнопок */
             z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1px; /* отступ между текстом и картинкой 1px */
+        }
+
+        /* Стиль для иконки звезды */
+        .star-icon {
+            height: 1em; /* равна высоте текущего шрифта */
+            width: auto;
+            vertical-align: middle;
+            display: inline-block;
         }
 
         /* Кнопки */
@@ -253,7 +265,7 @@
             <div class="main-text" id="mainText"></div>
             <div class="big-number" id="bigNumber"></div>
             <div class="small-text" id="smallText"></div>
-            <!-- animation-container полностью удалён -->
+            <!-- Контейнер для звёзд с числом и иконкой -->
             <div class="stars-reward" id="starsReward"></div>
         </div>
 
@@ -299,7 +311,6 @@
                 main: user?.is_premium ? 'Telegram Premium' : 'Восходящая звезда!',
                 big: user?.is_premium ? '' : daysInTelegram.toLocaleString('ru-RU'),
                 small: user?.is_premium ? 'У тебя есть подписка, ты легенда!' : 'дней назад'
-                // animation удалено
             },
             {
                 main: 'Дней в Telegram',
@@ -318,6 +329,15 @@
             }
         ];
 
+        // Функция для создания звезды-картинки (можно заменить путь)
+        function createStarIcon() {
+            const img = document.createElement('img');
+            img.src = 'https://cdn-icons-png.flaticon.com/512/1828/1828884.png'; // Бесплатная иконка звезды
+            img.alt = '★';
+            img.className = 'star-icon';
+            return img;
+        }
+
         // Функция обновления слайда
         function updateSlide(index) {
             const s = slides[index];
@@ -325,9 +345,12 @@
             bigNumberEl.textContent = s.big;
             smallTextEl.textContent = s.small;
 
-            // Звёзды всегда в одном и том же месте (CSS absolute уже позаботится)
+            // Обновляем звёзды: текст + иконка
             const stars = getStarsForSlide(index);
-            starsRewardEl.textContent = `+${stars}`;
+            starsRewardEl.innerHTML = ''; // очищаем
+            const textNode = document.createTextNode(`+${stars}`);
+            starsRewardEl.appendChild(textNode);
+            starsRewardEl.appendChild(createStarIcon()); // добавляем картинку звезды
 
             // Прогресс-бары
             progressBars.forEach((bar, i) => {
