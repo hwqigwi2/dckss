@@ -26,7 +26,7 @@
             padding: 8px 16px 4px;
             position: relative;
             touch-action: pan-y pinch-zoom;
-            transition: background 0.5s ease; /* плавная смена фона */
+            transition: background 0.5s ease; /* плавная смена фона за 0.5 сек */
         }
 
         #particles-canvas {
@@ -91,6 +91,16 @@
             to { width: 100%; }
         }
 
+        /* Анимация появления контента (плавное затухание + небольшой сдвиг) */
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeSlide 0.4s ease forwards;
+        }
+
         .slide {
             display: flex;
             flex-direction: column;
@@ -101,6 +111,10 @@
             text-align: center;
             padding-top: 5vh;
             position: relative;
+        }
+
+        .main-text, .big-number, .small-text, .animation-container, .stars-reward {
+            will-change: opacity, transform; /* оптимизация */
         }
 
         .main-text {
@@ -133,11 +147,17 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: margin 0.3s ease; /* для смещения */
+        }
+
+        /* Класс для смещения стикера на первом слайде вниз на 20px */
+        .animation-container.shift-down {
+            margin-top: 35px; /* было 15px, станет 35px (смещение на 20px вниз) */
         }
 
         .stars-reward {
             position: absolute;
-            bottom: 10px; /* поднято, чтобы не перекрывать анимацию */
+            bottom: 90px;
             left: 0;
             width: 100%;
             font-size: 32px;
@@ -256,6 +276,9 @@
                 width: 200px;
                 height: 200px;
             }
+            .animation-container.shift-down {
+                margin-top: 30px; /* адаптация для мобильных */
+            }
         }
     </style>
 </head>
@@ -316,7 +339,7 @@
             }
         }
 
-        // Тексты для слайдов (первый слайд теперь всегда Premium)
+        // Тексты слайдов
         const slides = [
             {
                 main: 'Telegram Premium',
@@ -340,20 +363,20 @@
             }
         ];
 
-        // Массив с путями к JSON (стикеры)
+        // Стикеры (JSON)
         const animations = [
-            'prem.json',   // слайд 0
-            'send.json',   // слайд 1 (был day, теперь send)
-            'day.json',    // слайд 2 (был send, теперь day)
-            'best.json'    // слайд 3
+            'prem.json',
+            'send.json',
+            'day.json',
+            'best.json'
         ];
 
-        // Градиенты для каждого слайда
+        // Градиенты фона
         const backgrounds = [
-            'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)', // фиолетовый
-            'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)', // жёлтый
-            'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)', // голубой (как был)
-            'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'  // оранжевый
+            'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)',
+            'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)',
+            'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)',
+            'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'
         ];
 
         function createStarIcon() {
@@ -375,23 +398,56 @@
             });
         }
 
+        // Функция для применения анимации появления к элементам
+        function applyFadeIn(elements) {
+            elements.forEach(el => {
+                if (el) {
+                    el.classList.remove('fade-in');
+                    // форсируем reflow, чтобы анимация запустилась заново
+                    void el.offsetWidth;
+                    el.classList.add('fade-in');
+                }
+            });
+        }
+
         function updateSlide(index) {
             const s = slides[index];
+
+            // Обновляем текстовые поля (они появятся с анимацией позже)
             mainTextEl.textContent = s.main;
             bigNumberEl.textContent = s.big;
             smallTextEl.textContent = s.small;
 
-            // Меняем фон body
+            // Меняем фон body (плавно благодаря CSS transition)
             document.body.style.background = backgrounds[index];
 
+            // Загружаем стикер
             loadAnimation(animationContainer, animations[index]);
 
+            // Обновляем звёзды
             const stars = getStarsForSlide(index);
             starsRewardEl.innerHTML = '';
             const textNode = document.createTextNode(`+${stars}`);
             starsRewardEl.appendChild(textNode);
             starsRewardEl.appendChild(createStarIcon());
 
+            // Управляем смещением стикера на первом слайде
+            if (index === 0) {
+                animationContainer.classList.add('shift-down');
+            } else {
+                animationContainer.classList.remove('shift-down');
+            }
+
+            // Применяем анимацию появления ко всем элементам слайда
+            applyFadeIn([
+                mainTextEl,
+                bigNumberEl,
+                smallTextEl,
+                animationContainer,
+                starsRewardEl
+            ]);
+
+            // Прогресс-бары (без анимации появления, они сами по себе)
             progressBars.forEach((bar, i) => {
                 bar.classList.remove('visited', 'active');
                 if (i < index) {
@@ -401,6 +457,7 @@
                 }
             });
 
+            // Кнопка назад
             if (index === 0) {
                 backBtn.classList.add('hidden');
             } else {
@@ -489,7 +546,7 @@
         initStars();
         drawStars();
 
-        // Ripple эффект
+        // Ripple эффект для кнопок
         document.querySelectorAll('.btn').forEach(button => {
             button.addEventListener('touchstart', (e) => {
                 button.style.transform = 'scale(0.96)';
