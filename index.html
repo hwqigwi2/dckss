@@ -63,10 +63,11 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             width: 100%;
             height: 100%;
             text-align: center;
+            justify-content: flex-start; /* теперь контент прижат к верху */
+            padding-top: 5vh; /* такой же отступ, как у слайдов */
         }
 
         .progress {
@@ -214,7 +215,7 @@
             font-size: 18px;
             font-weight: 600;
             color: black;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            /* box-shadow удалён */
             transition: transform 0.15s cubic-bezier(.34,1.56,.64,1),
                         background-color 0.2s;
             font-family: inherit;
@@ -233,7 +234,7 @@
             background-color: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(5px);
             color: white;
-            box-shadow: none;
+            /* box-shadow: none; */
             border: 1px solid rgba(255,255,255,0.5);
             padding: 12px 50px;
             font-size: 16px;
@@ -249,7 +250,7 @@
             pointer-events: none;
         }
 
-        /* Финальный экран — стили аналогичные слайдам */
+        /* Финальный экран */
         .final-main-text {
             font-size: 20px;
             font-weight: 500;
@@ -259,7 +260,7 @@
         }
 
         .final-big-number {
-            font-size: 64px; /* чуть больше */
+            font-size: 64px;
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: 4px;
@@ -280,7 +281,7 @@
         .final-animation-container {
             width: 270px;
             height: 270px;
-            margin: -30px 0 20px; /* поднято на 30px вверх */
+            margin: -30px 0 20px; /* поднято на 30px */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -298,7 +299,7 @@
             font-size: 18px;
             font-weight: 600;
             color: black;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            /* box-shadow удалён */
             transition: transform 0.15s cubic-bezier(.34,1.56,.64,1),
                         background-color 0.2s;
             font-family: inherit;
@@ -339,7 +340,7 @@
                 padding: 10px 40px;
             }
             .big-number, .final-big-number {
-                font-size: 52px; /* подстройка */
+                font-size: 52px;
             }
             .stars-reward {
                 font-size: 28px;
@@ -385,11 +386,11 @@
             </div>
         </div>
 
-        <!-- Финальный экран (скрыт по умолчанию) -->
+        <!-- Финальный экран -->
         <div id="finalContainer">
             <div class="final-main-text" id="finalMainText">Ваш баланс</div>
             <div class="final-big-number" id="finalBigNumber"></div>
-            <div class="final-small-text" id="finalSmallText"></div> <!-- можно оставить пустым или написать "звёзд" -->
+            <div class="final-small-text" id="finalSmallText"></div>
             <div class="final-animation-container" id="finalAnimationContainer"></div>
             <button class="final-button" id="finalActionBtn">
                 <span>Вывести</span>
@@ -428,7 +429,6 @@
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
-        // Заранее генерируем звёзды для каждого слайда
         const starsPerSlide = [
             Math.floor(Math.random() * 31) + 20,
             Math.floor(Math.random() * 21) + 30,
@@ -574,14 +574,12 @@
 
             document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
 
-            // Отображаем общее количество звёзд
             finalBigNumber.innerHTML = '';
             const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
             finalBigNumber.appendChild(totalText);
             finalBigNumber.appendChild(createStarIcon());
 
-            // Можно добавить мелкий текст, например "звёзд", если нужно
-            finalSmallText.textContent = ''; // оставляем пустым или поставьте "звёзд"
+            finalSmallText.textContent = ''; // пусто
 
             loadAnimation(finalAnimationContainer, 'stars.json');
 
