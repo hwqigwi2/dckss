@@ -2,12 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Запрещаем масштабирование и зум двойным нажатием -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Premium Onboarding</title>
-    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Lottie для анимированных эмодзи -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
         * {
@@ -19,18 +16,17 @@
         body {
             height: 100vh;
             overflow: hidden;
-            background: linear-gradient(180deg, #66aaff 0%, #3390ec 100%);
+            background: linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px 16px 16px; /* Уменьшен верхний отступ */
+            padding: 8px 16px 16px;
             position: relative;
             touch-action: pan-y pinch-zoom;
         }
 
-        /* Фоновые частицы (звёзды) */
         #particles-canvas {
             position: fixed;
             top: 0;
@@ -69,23 +65,36 @@
             width: 60px;
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 4px;
-            transition: background-color 0.3s;
+            position: relative;
+            overflow: hidden;
         }
 
-        .progress-bar.active {
+        .progress-bar.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
             background-color: white;
+            border-radius: 4px;
+            animation: fill 5s linear forwards;
         }
 
-        /* Слайд-контейнер */
+        @keyframes fill {
+            to { width: 100%; }
+        }
+
+        /* Слайд */
         .slide {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Текст прижат к верху */
+            justify-content: flex-start;
             flex: 1;
             width: 100%;
             text-align: center;
-            padding-top: 5vh; /* Дополнительный сдвиг вверх */
+            padding-top: 5vh;
         }
 
         .main-text {
@@ -111,7 +120,6 @@
             margin-bottom: 15px;
         }
 
-        /* Контейнер для анимированного эмодзи */
         .animation-container {
             width: 140px;
             height: 140px;
@@ -120,6 +128,17 @@
             justify-content: center;
             align-items: center;
             flex-shrink: 0;
+        }
+
+        /* Блок звёзд */
+        .stars-reward {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         /* Кнопки */
@@ -142,7 +161,7 @@
             font-weight: 600;
             color: #3390ec;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.1s ease, opacity 0.2s;
+            transition: transform 0.1s ease, background-color 0.1s;
             font-family: inherit;
             width: fit-content;
             min-width: 200px;
@@ -151,7 +170,7 @@
         }
 
         .btn:active {
-            transform: scale(0.97);
+            transform: scale(0.92);
         }
 
         .btn.secondary {
@@ -161,6 +180,11 @@
             border: 1px solid rgba(255,255,255,0.5);
             padding: 12px 40px;
             font-size: 16px;
+        }
+
+        .btn.secondary:active {
+            background-color: rgba(255,255,255,0.1);
+            transform: scale(0.92);
         }
 
         .btn.hidden {
@@ -173,8 +197,8 @@
                 min-width: 160px;
                 font-size: 16px;
             }
-            .big-number {
-                font-size: 48px;
+            .big-number, .stars-reward {
+                font-size: 42px;
             }
             .main-text {
                 font-size: 18px;
@@ -190,7 +214,6 @@
     <canvas id="particles-canvas"></canvas>
 
     <div class="content">
-        <!-- Индикатор слайдов -->
         <div class="progress" id="progress">
             <span class="progress-bar" data-index="0"></span>
             <span class="progress-bar" data-index="1"></span>
@@ -198,15 +221,14 @@
             <span class="progress-bar" data-index="3"></span>
         </div>
 
-        <!-- Слайд (динамическая часть) -->
         <div class="slide">
             <div class="main-text" id="mainText"></div>
             <div class="big-number" id="bigNumber"></div>
             <div class="small-text" id="smallText"></div>
             <div class="animation-container" id="animationContainer"></div>
+            <div class="stars-reward" id="starsReward"></div> <!-- Количество звёзд -->
         </div>
 
-        <!-- Кнопки навигации -->
         <div class="buttons">
             <button class="btn" id="nextBtn">Продолжить</button>
             <button class="btn secondary hidden" id="backBtn">Назад</button>
@@ -223,37 +245,50 @@
         const bigNumberEl = document.getElementById('bigNumber');
         const smallTextEl = document.getElementById('smallText');
         const animationContainer = document.getElementById('animationContainer');
+        const starsRewardEl = document.getElementById('starsReward');
         const progressBars = document.querySelectorAll('.progress-bar');
         const nextBtn = document.getElementById('nextBtn');
         const backBtn = document.getElementById('backBtn');
 
         let currentSlide = 0;
+        let autoTimer = null;
 
         // Генерация данных
-        const daysInTelegram = Math.floor(Math.random() * 1500) + 500; // 500–1999
-        const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789; // 4789–23842
+        const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+        const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
-        // Данные для слайдов
+        // Функции для генерации звёзд по слайдам
+        function getStarsForSlide(index) {
+            switch(index) {
+                case 0: return Math.floor(Math.random() * 31) + 20; // 20-50
+                case 1: return Math.floor(Math.random() * 21) + 30; // 30-50
+                case 2: return Math.floor(Math.random() * 36) + 40; // 40-75
+                case 3: return Math.floor(Math.random() * 151) + 100; // 100-250
+                default: return 0;
+            }
+        }
+
+        // Данные слайдов
         const slides = [
-            { // Слайд 1: Премиум / Восходящая звезда
+            {
                 main: user?.is_premium ? 'Telegram Premium' : 'Восходящая звезда!',
                 big: user?.is_premium ? '' : daysInTelegram.toLocaleString('ru-RU'),
                 small: user?.is_premium ? 'У тебя есть подписка, ты легенда!' : 'дней назад',
                 animation: 'https://lottie.host/0e7f6a3c-4b9d-4f3b-9a1a-8b5c6d7e8f12/star.json'
             },
-            { // Слайд 2: Дней в Telegram
+            {
                 main: 'Дней в Telegram',
                 big: daysInTelegram.toLocaleString('ru-RU'),
                 small: 'дней',
                 animation: 'https://lottie.host/7f8e9d0c-5a4b-3c2d-1e0f-9a8b7c6d5e4f/confetti.json'
             },
-            { // Слайд 3: Сообщений отправлено
+            {
                 main: 'Сообщений отправлено',
                 big: messagesSent.toLocaleString('ru-RU'),
                 small: 'сообщений',
                 animation: 'https://lottie.host/9a8b7c6d-5e4f-3d2c-1b0a-9f8e7d6c5b4a/heart.json'
             },
-            { // Слайд 4: 0.01% лучших
+            {
                 main: 'Ты в 0.01% лучших',
                 big: '0.01%',
                 small: 'пользователей',
@@ -272,6 +307,17 @@
             });
         }
 
+        function resetAutoTimer() {
+            if (autoTimer) clearTimeout(autoTimer);
+            // Запускаем таймер на 5 секунд для перехода на следующий слайд
+            if (currentSlide < slides.length - 1) {
+                autoTimer = setTimeout(() => {
+                    currentSlide++;
+                    updateSlide(currentSlide);
+                }, 5000);
+            }
+        }
+
         function updateSlide(index) {
             const s = slides[index];
             mainTextEl.textContent = s.main;
@@ -279,15 +325,29 @@
             smallTextEl.textContent = s.small;
             loadAnimation(animationContainer, s.animation);
 
-            progressBars.forEach((bar, i) => {
-                if (i === index) bar.classList.add('active');
-                else bar.classList.remove('active');
-            });
+            // Обновляем звёзды
+            const stars = getStarsForSlide(index);
+            starsRewardEl.textContent = `+${stars} звёзд`;
 
+            // Обновляем прогресс-бары
+            progressBars.forEach((bar, i) => {
+                bar.classList.remove('active');
+                // Убираем анимацию, если была
+                const after = bar.querySelector('::after');
+                if (after) after.style.animation = 'none';
+            });
+            // Добавляем класс active текущему бару — запускается CSS-анимация
+            progressBars[index].classList.add('active');
+
+            // Управление кнопкой назад
             if (index === 0) backBtn.classList.add('hidden');
             else backBtn.classList.remove('hidden');
+
+            // Сбрасываем и запускаем таймер автоперехода
+            resetAutoTimer();
         }
 
+        // Обработчики кнопок с анимацией (через классы уже реализовано в :active)
         nextBtn.addEventListener('click', () => {
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
@@ -304,7 +364,7 @@
 
         updateSlide(0);
 
-        // ---- Анимация звёзд на фоне (canvas) ----
+        // ---- Звёзды на фоне (canvas) ----
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -323,7 +383,7 @@
                     x: Math.random() * width,
                     y: Math.random() * height,
                     radius: Math.random() * 2.5 + 0.5,
-                    speedY: Math.random() * 0.3 + 0.1, // скорость падения
+                    speedY: Math.random() * 0.3 + 0.1,
                     opacity: Math.random() * 0.7 + 0.3,
                     twinkleSpeed: Math.random() * 0.02 + 0.01,
                     twinklePhase: Math.random() * Math.PI * 2
@@ -333,9 +393,7 @@
 
         function drawStars() {
             ctx.clearRect(0, 0, width, height);
-            
             stars.forEach(s => {
-                // Мерцание: изменение opacity по синусу
                 const twinkle = Math.sin(Date.now() * s.twinkleSpeed + s.twinklePhase) * 0.2;
                 ctx.globalAlpha = Math.min(1, Math.max(0.2, s.opacity + twinkle));
                 ctx.fillStyle = 'white';
@@ -343,14 +401,12 @@
                 ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Движение вниз
                 s.y += s.speedY;
                 if (s.y > height + 10) {
                     s.y = -10;
                     s.x = Math.random() * width;
                 }
             });
-
             requestAnimationFrame(drawStars);
         }
 
