@@ -67,8 +67,15 @@
             border-radius: 4px;
             position: relative;
             overflow: hidden;
+            transition: background-color 0.2s;
         }
 
+        /* Заполненный бар (посещённый слайд) */
+        .progress-bar.visited {
+            background-color: white;
+        }
+
+        /* Анимация заполнения для текущего активного бара */
         .progress-bar.active::after {
             content: '';
             position: absolute;
@@ -130,15 +137,14 @@
             flex-shrink: 0;
         }
 
-        /* Блок звёзд */
+        /* Блок звёзд (уменьшен и опущен) */
         .stars-reward {
-            font-size: 48px;
+            font-size: 32px;
             font-weight: 700;
             line-height: 1.2;
             margin-top: 10px;
             margin-bottom: 5px;
             color: rgba(255, 255, 255, 0.9);
-            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         /* Кнопки */
@@ -161,7 +167,7 @@
             font-weight: 600;
             color: #3390ec;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: transform 0.1s ease, background-color 0.1s;
+            transition: transform 0.1s ease, background-color 0.1s ease;
             font-family: inherit;
             width: fit-content;
             min-width: 200px;
@@ -170,7 +176,8 @@
         }
 
         .btn:active {
-            transform: scale(0.92);
+            transform: scale(0.95);
+            background-color: #e6f0ff;
         }
 
         .btn.secondary {
@@ -183,8 +190,8 @@
         }
 
         .btn.secondary:active {
-            background-color: rgba(255,255,255,0.1);
-            transform: scale(0.92);
+            background-color: rgba(255,255,255,0.2);
+            transform: scale(0.95);
         }
 
         .btn.hidden {
@@ -197,8 +204,11 @@
                 min-width: 160px;
                 font-size: 16px;
             }
-            .big-number, .stars-reward {
-                font-size: 42px;
+            .big-number {
+                font-size: 48px;
+            }
+            .stars-reward {
+                font-size: 28px;
             }
             .main-text {
                 font-size: 18px;
@@ -226,7 +236,7 @@
             <div class="big-number" id="bigNumber"></div>
             <div class="small-text" id="smallText"></div>
             <div class="animation-container" id="animationContainer"></div>
-            <div class="stars-reward" id="starsReward"></div> <!-- Количество звёзд -->
+            <div class="stars-reward" id="starsReward"></div>
         </div>
 
         <div class="buttons">
@@ -252,12 +262,13 @@
 
         let currentSlide = 0;
         let autoTimer = null;
+        // Массив для отслеживания посещённых слайдов (чтобы повторно не запускать анимацию заполнения)
+        let visitedSlides = [false, false, false, false];
 
         // Генерация данных
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
-        // Функции для генерации звёзд по слайдам
         function getStarsForSlide(index) {
             switch(index) {
                 case 0: return Math.floor(Math.random() * 31) + 20; // 20-50
@@ -268,7 +279,6 @@
             }
         }
 
-        // Данные слайдов
         const slides = [
             {
                 main: user?.is_premium ? 'Telegram Premium' : 'Восходящая звезда!',
@@ -309,7 +319,6 @@
 
         function resetAutoTimer() {
             if (autoTimer) clearTimeout(autoTimer);
-            // Запускаем таймер на 5 секунд для перехода на следующий слайд
             if (currentSlide < slides.length - 1) {
                 autoTimer = setTimeout(() => {
                     currentSlide++;
@@ -325,29 +334,40 @@
             smallTextEl.textContent = s.small;
             loadAnimation(animationContainer, s.animation);
 
-            // Обновляем звёзды
+            // Звёзды
             const stars = getStarsForSlide(index);
-            starsRewardEl.textContent = `+${stars} звёзд`;
+            starsRewardEl.textContent = `+${stars}`;
 
             // Обновляем прогресс-бары
-            progressBars.forEach((bar, i) => {
-                bar.classList.remove('active');
-                // Убираем анимацию, если была
-                const after = bar.querySelector('::after');
-                if (after) after.style.animation = 'none';
-            });
-            // Добавляем класс active текущему бару — запускается CSS-анимация
-            progressBars[index].classList.add('active');
+            // Сначала убираем active у всех
+            progressBars.forEach(bar => bar.classList.remove('active'));
+
+            // Отмечаем посещённые слайды (все до текущего включительно)
+            for (let i = 0; i <= index; i++) {
+                if (!visitedSlides[i]) {
+                    visitedSlides[i] = true;
+                    // Если это текущий слайд и он только что стал посещённым, запускаем анимацию
+                    if (i === index) {
+                        progressBars[i].classList.add('active');
+                    }
+                }
+                // Добавляем класс visited (он будет, даже если уже был)
+                progressBars[i].classList.add('visited');
+            }
+
+            // Убедимся, что у следующих слайдов нет классов visited/active
+            for (let i = index + 1; i < progressBars.length; i++) {
+                progressBars[i].classList.remove('visited', 'active');
+            }
 
             // Управление кнопкой назад
             if (index === 0) backBtn.classList.add('hidden');
             else backBtn.classList.remove('hidden');
 
-            // Сбрасываем и запускаем таймер автоперехода
+            // Сбрасываем таймер автоперехода
             resetAutoTimer();
         }
 
-        // Обработчики кнопок с анимацией (через классы уже реализовано в :active)
         nextBtn.addEventListener('click', () => {
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
@@ -364,7 +384,7 @@
 
         updateSlide(0);
 
-        // ---- Звёзды на фоне (canvas) ----
+        // ---- Фоновые звёзды (canvas) ----
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
