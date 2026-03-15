@@ -26,7 +26,7 @@
             padding: 8px 16px 4px;
             position: relative;
             touch-action: pan-y pinch-zoom;
-            transition: background 0.5s ease; /* плавная смена фона за 0.5 сек */
+            transition: background 0.5s ease;
         }
 
         #particles-canvas {
@@ -48,6 +48,25 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
+            height: 100%;
+        }
+
+        /* Контейнер для слайдов (прогресс + слайд + кнопки) */
+        #slidesContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Финальный контейнер */
+        #finalContainer {
+            display: none; /* скрыт по умолчанию */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
             height: 100%;
         }
 
@@ -91,7 +110,7 @@
             to { width: 100%; }
         }
 
-        /* Анимация появления контента (плавное затухание + небольшой сдвиг) */
+        /* Анимация появления */
         @keyframes fadeSlide {
             0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -111,10 +130,6 @@
             text-align: center;
             padding-top: 5vh;
             position: relative;
-        }
-
-        .main-text, .big-number, .small-text, .animation-container, .stars-reward {
-            will-change: opacity, transform; /* оптимизация */
         }
 
         .main-text {
@@ -147,12 +162,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: margin 0.3s ease; /* для смещения */
+            transition: margin 0.3s ease;
         }
 
-        /* Класс для смещения стикера на первом слайде вниз на 20px */
         .animation-container.shift-down {
-            margin-top: 35px; /* было 15px, станет 35px (смещение на 20px вниз) */
+            margin-top: 35px;
         }
 
         .stars-reward {
@@ -180,6 +194,7 @@
             display: inline-block;
         }
 
+        /* Кнопки навигации */
         .buttons {
             display: flex;
             flex-direction: column;
@@ -237,6 +252,54 @@
             pointer-events: none;
         }
 
+        /* Финальный экран */
+        .final-total {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+        }
+
+        .final-animation-container {
+            width: 270px;
+            height: 270px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .final-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            background-color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            color: black;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.15s cubic-bezier(.34,1.56,.64,1),
+                        background-color 0.2s;
+            font-family: inherit;
+            width: fit-content;
+            min-width: 250px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .final-button:active {
+            transform: scale(0.95);
+            background-color: #e6f0ff;
+        }
+
         .ripple {
             position: absolute;
             border-radius: 50%;
@@ -254,7 +317,7 @@
         }
 
         @media (max-width: 380px) {
-            .btn {
+            .btn, .final-button {
                 padding: 12px 40px;
                 min-width: 210px;
                 font-size: 16px;
@@ -262,7 +325,7 @@
             .btn.secondary {
                 padding: 10px 40px;
             }
-            .big-number {
+            .big-number, .final-total {
                 font-size: 48px;
             }
             .stars-reward {
@@ -272,12 +335,12 @@
             .main-text {
                 font-size: 18px;
             }
-            .animation-container {
+            .animation-container, .final-animation-container {
                 width: 200px;
                 height: 200px;
             }
             .animation-container.shift-down {
-                margin-top: 30px; /* адаптация для мобильных */
+                margin-top: 30px;
             }
         }
     </style>
@@ -286,24 +349,37 @@
     <canvas id="particles-canvas"></canvas>
 
     <div class="content">
-        <div class="progress" id="progress">
-            <span class="progress-bar" data-index="0"></span>
-            <span class="progress-bar" data-index="1"></span>
-            <span class="progress-bar" data-index="2"></span>
-            <span class="progress-bar" data-index="3"></span>
+        <!-- Обычные слайды -->
+        <div id="slidesContainer">
+            <div class="progress" id="progress">
+                <span class="progress-bar" data-index="0"></span>
+                <span class="progress-bar" data-index="1"></span>
+                <span class="progress-bar" data-index="2"></span>
+                <span class="progress-bar" data-index="3"></span>
+            </div>
+
+            <div class="slide">
+                <div class="main-text" id="mainText"></div>
+                <div class="big-number" id="bigNumber"></div>
+                <div class="small-text" id="smallText"></div>
+                <div class="animation-container" id="animationContainer"></div>
+                <div class="stars-reward" id="starsReward"></div>
+            </div>
+
+            <div class="buttons">
+                <button class="btn" id="nextBtn">Продолжить</button>
+                <button class="btn secondary hidden" id="backBtn">Назад</button>
+            </div>
         </div>
 
-        <div class="slide">
-            <div class="main-text" id="mainText"></div>
-            <div class="big-number" id="bigNumber"></div>
-            <div class="small-text" id="smallText"></div>
-            <div class="animation-container" id="animationContainer"></div>
-            <div class="stars-reward" id="starsReward"></div>
-        </div>
-
-        <div class="buttons">
-            <button class="btn" id="nextBtn">Продолжить</button>
-            <button class="btn secondary hidden" id="backBtn">Назад</button>
+        <!-- Финальный экран (скрыт по умолчанию) -->
+        <div id="finalContainer">
+            <div class="final-total" id="finalTotal"></div>
+            <div class="final-animation-container" id="finalAnimationContainer"></div>
+            <button class="final-button" id="finalActionBtn">
+                <span>Вывести</span>
+                <img src="star.png" class="star-icon" alt="★">
+            </button>
         </div>
     </div>
 
@@ -313,6 +389,8 @@
         const user = Telegram.WebApp.initDataUnsafe?.user;
 
         // Элементы
+        const slidesContainer = document.getElementById('slidesContainer');
+        const finalContainer = document.getElementById('finalContainer');
         const mainTextEl = document.getElementById('mainText');
         const bigNumberEl = document.getElementById('bigNumber');
         const smallTextEl = document.getElementById('smallText');
@@ -322,22 +400,26 @@
         const nextBtn = document.getElementById('nextBtn');
         const backBtn = document.getElementById('backBtn');
 
+        // Элементы финала
+        const finalTotalEl = document.getElementById('finalTotal');
+        const finalAnimationContainer = document.getElementById('finalAnimationContainer');
+        const finalActionBtn = document.getElementById('finalActionBtn');
+
         let currentSlide = 0;
         let autoTimer = null;
 
-        // Генерация данных
+        // Генерация данных (фиксированные значения для каждого слайда)
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
-        function getStarsForSlide(index) {
-            switch(index) {
-                case 0: return Math.floor(Math.random() * 31) + 20;
-                case 1: return Math.floor(Math.random() * 21) + 30;
-                case 2: return Math.floor(Math.random() * 36) + 40;
-                case 3: return Math.floor(Math.random() * 151) + 100;
-                default: return 0;
-            }
-        }
+        // Заранее генерируем звёзды для каждого слайда, чтобы итог был постоянным
+        const starsPerSlide = [
+            Math.floor(Math.random() * 31) + 20,   // слайд 0: 20-50
+            Math.floor(Math.random() * 21) + 30,   // слайд 1: 30-50
+            Math.floor(Math.random() * 36) + 40,   // слайд 2: 40-75
+            Math.floor(Math.random() * 151) + 100  // слайд 3: 100-250
+        ];
+        const totalStars = starsPerSlide.reduce((a, b) => a + b, 0);
 
         // Тексты слайдов
         const slides = [
@@ -403,8 +485,7 @@
             elements.forEach(el => {
                 if (el) {
                     el.classList.remove('fade-in');
-                    // форсируем reflow, чтобы анимация запустилась заново
-                    void el.offsetWidth;
+                    void el.offsetWidth; // форсируем reflow
                     el.classList.add('fade-in');
                 }
             });
@@ -413,32 +494,27 @@
         function updateSlide(index) {
             const s = slides[index];
 
-            // Обновляем текстовые поля (они появятся с анимацией позже)
             mainTextEl.textContent = s.main;
             bigNumberEl.textContent = s.big;
             smallTextEl.textContent = s.small;
 
-            // Меняем фон body (плавно благодаря CSS transition)
             document.body.style.background = backgrounds[index];
 
-            // Загружаем стикер
             loadAnimation(animationContainer, animations[index]);
 
-            // Обновляем звёзды
-            const stars = getStarsForSlide(index);
+            // Используем заранее сгенерированные звёзды
+            const stars = starsPerSlide[index];
             starsRewardEl.innerHTML = '';
             const textNode = document.createTextNode(`+${stars}`);
             starsRewardEl.appendChild(textNode);
             starsRewardEl.appendChild(createStarIcon());
 
-            // Управляем смещением стикера на первом слайде
             if (index === 0) {
                 animationContainer.classList.add('shift-down');
             } else {
                 animationContainer.classList.remove('shift-down');
             }
 
-            // Применяем анимацию появления ко всем элементам слайда
             applyFadeIn([
                 mainTextEl,
                 bigNumberEl,
@@ -447,7 +523,6 @@
                 starsRewardEl
             ]);
 
-            // Прогресс-бары (без анимации появления, они сами по себе)
             progressBars.forEach((bar, i) => {
                 bar.classList.remove('visited', 'active');
                 if (i < index) {
@@ -457,7 +532,6 @@
                 }
             });
 
-            // Кнопка назад
             if (index === 0) {
                 backBtn.classList.add('hidden');
             } else {
@@ -474,13 +548,49 @@
                     currentSlide++;
                     updateSlide(currentSlide);
                 }, 5000);
+            } else {
+                // На последнем слайде таймер ведёт в финал
+                autoTimer = setTimeout(() => {
+                    goToFinal();
+                }, 5000);
             }
         }
 
+        // Переход в финальный экран
+        function goToFinal() {
+            // Останавливаем таймер
+            if (autoTimer) clearTimeout(autoTimer);
+
+            // Скрываем слайды, показываем финал
+            slidesContainer.style.display = 'none';
+            finalContainer.style.display = 'flex';
+
+            // Устанавливаем голубой фон (как на втором слайде)
+            document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
+
+            // Показываем общее количество звёзд
+            finalTotalEl.innerHTML = '';
+            const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
+            finalTotalEl.appendChild(totalText);
+            finalTotalEl.appendChild(createStarIcon());
+
+            // Загружаем стикер stars.json
+            loadAnimation(finalAnimationContainer, 'stars.json');
+
+            // Анимация появления для финала (просто добавим класс к контейнеру)
+            finalContainer.classList.remove('fade-in');
+            void finalContainer.offsetWidth;
+            finalContainer.classList.add('fade-in');
+        }
+
+        // Обработчик кнопки "Продолжить"
         nextBtn.addEventListener('click', () => {
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
                 updateSlide(currentSlide);
+            } else {
+                // Последний слайд -> финал
+                goToFinal();
             }
         });
 
@@ -491,6 +601,13 @@
             }
         });
 
+        // Пока без логики на кнопке "Вывести"
+        finalActionBtn.addEventListener('click', () => {
+            // Заглушка
+            console.log('Вывести (логика пока не реализована)');
+        });
+
+        // Инициализация первого слайда
         updateSlide(0);
 
         // ---- Фоновые звёзды (canvas) ----
@@ -546,8 +663,8 @@
         initStars();
         drawStars();
 
-        // Ripple эффект для кнопок
-        document.querySelectorAll('.btn').forEach(button => {
+        // Ripple эффект для всех кнопок
+        document.querySelectorAll('.btn, .final-button').forEach(button => {
             button.addEventListener('touchstart', (e) => {
                 button.style.transform = 'scale(0.96)';
 
