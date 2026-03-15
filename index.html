@@ -69,12 +69,7 @@
             overflow: hidden;
         }
 
-        /* Полностью посещённый слайд */
-        .progress-bar.visited {
-            background-color: white;
-        }
-
-        /* Анимация заполнения для текущего слайда (запускается только один раз) */
+        /* Анимация заполнения для текущего слайда */
         .progress-bar.active::after {
             content: '';
             position: absolute;
@@ -136,13 +131,13 @@
             flex-shrink: 0;
         }
 
-        /* Блок звёзд (теперь сильно ниже) */
+        /* Блок звёзд — регулируйте margin-bottom для изменения высоты */
         .stars-reward {
             font-size: 32px;
             font-weight: 700;
             line-height: 1.2;
             margin-top: 10px;
-            margin-bottom: 30px; /* Увеличено с 10px до 30px */
+            margin-bottom: 60px; /* ← меняйте это значение, чтобы поднять/опустить текст */
             color: rgba(255, 255, 255, 0.9);
         }
 
@@ -196,7 +191,6 @@
             transform: scale(0.95);
         }
 
-        /* Скрываем кнопку, но сохраняем её место (чтобы "Продолжить" не прыгала) */
         .btn.hidden {
             visibility: hidden;
             pointer-events: none;
@@ -230,7 +224,7 @@
             }
             .stars-reward {
                 font-size: 28px;
-                margin-bottom: 25px;
+                margin-bottom: 25px; /* и здесь подстройте при необходимости */
             }
             .main-text {
                 font-size: 18px;
@@ -285,9 +279,6 @@
         let currentSlide = 0;
         let autoTimer = null;
 
-        // Массив для отслеживания, был ли слайд уже полностью показан
-        let visitedSlides = [false, false, false, false];
-
         // Генерация данных
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
@@ -340,28 +331,13 @@
             });
         }
 
-        // Функция, помечающая текущий слайд как посещённый (после завершения показа)
-        function markCurrentVisited() {
-            if (!visitedSlides[currentSlide]) {
-                visitedSlides[currentSlide] = true;
-                // Убираем active, добавляем visited
-                progressBars[currentSlide].classList.remove('active');
-                progressBars[currentSlide].classList.add('visited');
-            }
-        }
-
-        // Очистка и установка нового таймера для автоперехода
         function resetAutoTimer() {
             if (autoTimer) clearTimeout(autoTimer);
             if (currentSlide < slides.length - 1) {
                 autoTimer = setTimeout(() => {
-                    // Перед переходом помечаем текущий слайд как посещённый
-                    markCurrentVisited();
                     currentSlide++;
                     updateSlide(currentSlide);
                 }, 5000);
-            } else {
-                // На последнем слайде таймер не запускаем, но можем закрыть или ничего не делать
             }
         }
 
@@ -376,42 +352,23 @@
             const stars = getStarsForSlide(index);
             starsRewardEl.textContent = `+${stars}`;
 
-            // Обновляем прогресс-бары
-            // Сначала убираем active у всех
+            // Обновляем прогресс-бары: убираем активный класс у всех, добавляем текущему
             progressBars.forEach(bar => bar.classList.remove('active'));
+            progressBars[index].classList.add('active');
 
-            // Проставляем visited для всех слайдов, которые уже посещены (индекс < current, и сам current, если уже посещён)
-            for (let i = 0; i < progressBars.length; i++) {
-                if (visitedSlides[i]) {
-                    progressBars[i].classList.add('visited');
-                } else {
-                    progressBars[i].classList.remove('visited');
-                }
-            }
-
-            // Если текущий слайд ещё не посещён, добавляем ему active для анимации
-            if (!visitedSlides[index]) {
-                progressBars[index].classList.add('active');
-            } else {
-                // Если уже посещён, убеждаемся, что есть visited (уже есть)
-                progressBars[index].classList.add('visited');
-            }
-
-            // Управление кнопкой назад (скрываем через visibility, чтобы не менялось место)
+            // Управление кнопкой назад
             if (index === 0) {
                 backBtn.classList.add('hidden');
             } else {
                 backBtn.classList.remove('hidden');
             }
 
-            // Сбрасываем таймер автоперехода (для нового слайда)
+            // Сбрасываем таймер автоперехода
             resetAutoTimer();
         }
 
         // Обработчик кнопки "Продолжить"
         nextBtn.addEventListener('click', () => {
-            // Помечаем текущий слайд как посещённый перед переходом
-            markCurrentVisited();
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
                 updateSlide(currentSlide);
@@ -421,8 +378,6 @@
         // Обработчик кнопки "Назад"
         backBtn.addEventListener('click', () => {
             if (currentSlide > 0) {
-                // При возврате назад не нужно помечать текущий как посещённый (он остаётся в состоянии visited)
-                // Просто переходим
                 currentSlide--;
                 updateSlide(currentSlide);
             }
