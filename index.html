@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Запрещаем масштабирование и зум двойным нажатием -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Premium Onboarding</title>
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -16,19 +17,20 @@
         }
 
         body {
-            min-height: 100vh;
-            background: linear-gradient(180deg, #99ccff 0%, #3390ec 100%);
+            height: 100vh; /* Ровно высота экрана, без прокрутки */
+            overflow: hidden; /* Отключаем прокрутку */
+            background: linear-gradient(180deg, #b3d9ff 0%, #3390ec 100%); /* Светло-голубой сверху → насыщенный снизу */
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 20px 30px;
+            padding: 16px 16px 20px; /* Уменьшенные отступы для точного размещения */
             position: relative;
-            overflow-x: hidden;
+            touch-action: pan-y pinch-zoom; /* Запрещает зум двойным касанием, но оставляет возможность скроллить, если вдруг */
         }
 
-        /* Контейнер для фоновых частиц (звёздочки) */
+        /* Контейнер для фоновых частиц (пузырьки) */
         #particles-canvas {
             position: fixed;
             top: 0;
@@ -49,7 +51,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            min-height: 100vh;
+            height: 100%; /* Занимает всю высоту body */
         }
 
         /* Индикатор слайдов (4 полоски) */
@@ -58,8 +60,9 @@
             gap: 8px;
             justify-content: center;
             width: 100%;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            flex-shrink: 0; /* Не сжимается */
         }
 
         .progress-bar {
@@ -80,7 +83,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex: 1;
+            flex: 1; /* Занимает всё доступное пространство между progress и кнопками */
             width: 100%;
             text-align: center;
         }
@@ -90,6 +93,7 @@
             font-weight: 700;
             margin-bottom: 8px;
             text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            line-height: 1.2;
         }
 
         .sub-title {
@@ -98,16 +102,21 @@
             opacity: 0.8;
             text-shadow: 0 1px 3px rgba(0,0,0,0.15);
             margin-bottom: 20px;
+            line-height: 1.4;
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Контейнер для анимированного эмодзи */
         .animation-container {
-            width: 180px;
-            height: 180px;
-            margin: 10px 0 20px;
+            width: 160px;
+            height: 160px;
+            margin: 5px 0 15px;
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-shrink: 0;
         }
 
         /* Кнопки */
@@ -115,16 +124,17 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            flex-shrink: 0; /* Не сжимается */
         }
 
         .btn {
             background-color: white;
             border: none;
             border-radius: 30px;
-            padding: 14px 60px;
+            padding: 14px 40px;
             font-size: 18px;
             font-weight: 600;
             color: #3390ec;
@@ -132,8 +142,9 @@
             transition: transform 0.1s ease, opacity 0.2s;
             font-family: inherit;
             width: fit-content;
-            min-width: 220px;
+            min-width: 200px;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent; /* Убирает серый фон при тапе на мобильных */
         }
 
         .btn:active {
@@ -145,7 +156,7 @@
             color: white;
             box-shadow: none;
             border: 1px solid rgba(255,255,255,0.5);
-            padding: 12px 50px;
+            padding: 12px 40px;
             font-size: 16px;
         }
 
@@ -156,11 +167,19 @@
         /* Адаптация для маленьких экранов */
         @media (max-width: 380px) {
             .btn {
-                padding: 12px 40px;
-                min-width: 180px;
+                padding: 12px 30px;
+                min-width: 160px;
+                font-size: 16px;
             }
             .main-title {
                 font-size: 28px;
+            }
+            .sub-title {
+                font-size: 15px;
+            }
+            .animation-container {
+                width: 140px;
+                height: 140px;
             }
         }
     </style>
@@ -220,7 +239,6 @@
                 subtitle: user?.is_premium 
                     ? 'У тебя есть подписка, ты легенда!' 
                     : `Ты присоединился(-ась) к Telegram ${daysInTelegram.toLocaleString('ru-RU')} дней назад`,
-                // Для премиум другая анимация? Пока одна, но можно менять
                 animation: 'https://lottie.host/0e7f6a3c-4b9d-4f3b-9a1a-8b5c6d7e8f12/star.json' // звезда
             },
             {
@@ -242,9 +260,7 @@
 
         // Функция загрузки Lottie-анимации
         function loadAnimation(container, path) {
-            // Очищаем контейнер
             container.innerHTML = '';
-            // Загружаем новую анимацию
             lottie.loadAnimation({
                 container: container,
                 renderer: 'svg',
@@ -261,7 +277,6 @@
             subTitleEl.textContent = slideData.subtitle;
             loadAnimation(animationContainer, slideData.animation);
 
-            // Обновляем индикатор прогресса
             progressBars.forEach((bar, i) => {
                 if (i === index) {
                     bar.classList.add('active');
@@ -270,25 +285,19 @@
                 }
             });
 
-            // Управление видимостью кнопки "Назад" (на первом слайде скрыта)
             if (index === 0) {
                 backBtn.classList.add('hidden');
             } else {
                 backBtn.classList.remove('hidden');
             }
-
-            // На последнем слайде можно изменить текст кнопки "Продолжить", но оставим "Продолжить"
-            // (можно добавить логику закрытия, но пока просто оставим)
         }
 
-        // Обработчики кнопок
         nextBtn.addEventListener('click', () => {
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
                 updateSlide(currentSlide);
             } else {
-                // Если это последний слайд — можно закрыть мини-апп
-                // Telegram.WebApp.close(); // раскомментируй, если нужно закрывать
+                // Можно закрыть мини-апп: Telegram.WebApp.close();
             }
         });
 
@@ -299,68 +308,67 @@
             }
         });
 
-        // Инициализация первого слайда
         updateSlide(0);
 
-        // ---- Фон с падающими звёздочками (Canvas) ----
+        // ---- Новая фоновая анимация: плавающие пузырьки (поднимаются вверх) ----
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
-        let particles = [];
+        let bubbles = [];
 
-        function initParticles() {
+        function initBubbles() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
 
-            const particleCount = 40;
-            particles = [];
-            for (let i = 0; i < particleCount; i++) {
-                particles.push({
+            const count = 25;
+            bubbles = [];
+            for (let i = 0; i < count; i++) {
+                bubbles.push({
                     x: Math.random() * width,
                     y: Math.random() * height,
-                    size: Math.random() * 3 + 1,
-                    speedY: Math.random() * 2 + 1,
-                    speedX: Math.random() * 0.5 - 0.25,
-                    opacity: Math.random() * 0.5 + 0.2
+                    radius: Math.random() * 8 + 3,
+                    speedY: -Math.random() * 0.5 - 0.2, // отрицательная скорость = вверх
+                    speedX: (Math.random() - 0.5) * 0.2,
+                    opacity: Math.random() * 0.3 + 0.1
                 });
             }
         }
 
-        function drawParticles() {
+        function drawBubbles() {
             ctx.clearRect(0, 0, width, height);
             ctx.fillStyle = 'white';
 
-            particles.forEach(p => {
-                ctx.globalAlpha = p.opacity;
+            bubbles.forEach(b => {
+                ctx.globalAlpha = b.opacity;
                 ctx.beginPath();
-                // Рисуем звездочку (можно просто круг)
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Двигаем
-                p.y += p.speedY;
-                p.x += p.speedX;
+                // Движение
+                b.y += b.speedY;
+                b.x += b.speedX;
 
-                // Сброс вверх
-                if (p.y > height + 10) {
-                    p.y = -10;
-                    p.x = Math.random() * width;
+                // Если ушли за верхнюю границу — появляются снизу
+                if (b.y + b.radius < 0) {
+                    b.y = height + b.radius;
+                    b.x = Math.random() * width;
                 }
-                if (p.x > width + 10) p.x = -10;
-                if (p.x < -10) p.x = width + 10;
+                // Боковые границы
+                if (b.x > width + b.radius) b.x = -b.radius;
+                if (b.x + b.radius < 0) b.x = width + b.radius;
             });
 
-            requestAnimationFrame(drawParticles);
+            requestAnimationFrame(drawBubbles);
         }
 
         window.addEventListener('resize', () => {
-            initParticles();
+            initBubbles();
         });
 
-        initParticles();
-        drawParticles();
+        initBubbles();
+        drawBubbles();
 
         // Сообщаем Telegram, что приложение готово
         Telegram.WebApp.expand();
