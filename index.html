@@ -51,7 +51,6 @@
             height: 100%;
         }
 
-        /* Контейнер для слайдов (прогресс + слайд + кнопки) */
         #slidesContainer {
             display: flex;
             flex-direction: column;
@@ -60,14 +59,14 @@
             height: 100%;
         }
 
-        /* Финальный контейнер */
         #finalContainer {
-            display: none; /* скрыт по умолчанию */
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 100%;
+            text-align: center;
         }
 
         .progress {
@@ -110,7 +109,6 @@
             to { width: 100%; }
         }
 
-        /* Анимация появления */
         @keyframes fadeSlide {
             0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -194,7 +192,6 @@
             display: inline-block;
         }
 
-        /* Кнопки навигации */
         .buttons {
             display: flex;
             flex-direction: column;
@@ -252,22 +249,38 @@
             pointer-events: none;
         }
 
-        /* Финальный экран */
-        .final-total {
-            font-size: 56px;
+        /* Финальный экран — стили аналогичные слайдам */
+        .final-main-text {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            opacity: 0.95;
+            line-height: 1.3;
+        }
+
+        .final-big-number {
+            font-size: 64px; /* чуть больше */
             font-weight: 700;
             line-height: 1.1;
-            margin-bottom: 20px;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1px;
         }
 
+        .final-small-text {
+            font-size: 16px;
+            font-weight: 400;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
         .final-animation-container {
             width: 270px;
             height: 270px;
-            margin: 20px 0;
+            margin: -30px 0 20px; /* поднято на 30px вверх */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -325,14 +338,14 @@
             .btn.secondary {
                 padding: 10px 40px;
             }
-            .big-number, .final-total {
-                font-size: 48px;
+            .big-number, .final-big-number {
+                font-size: 52px; /* подстройка */
             }
             .stars-reward {
                 font-size: 28px;
                 bottom: 70px;
             }
-            .main-text {
+            .main-text, .final-main-text {
                 font-size: 18px;
             }
             .animation-container, .final-animation-container {
@@ -374,7 +387,9 @@
 
         <!-- Финальный экран (скрыт по умолчанию) -->
         <div id="finalContainer">
-            <div class="final-total" id="finalTotal"></div>
+            <div class="final-main-text" id="finalMainText">Ваш баланс</div>
+            <div class="final-big-number" id="finalBigNumber"></div>
+            <div class="final-small-text" id="finalSmallText"></div> <!-- можно оставить пустым или написать "звёзд" -->
             <div class="final-animation-container" id="finalAnimationContainer"></div>
             <button class="final-button" id="finalActionBtn">
                 <span>Вывести</span>
@@ -401,27 +416,27 @@
         const backBtn = document.getElementById('backBtn');
 
         // Элементы финала
-        const finalTotalEl = document.getElementById('finalTotal');
+        const finalBigNumber = document.getElementById('finalBigNumber');
+        const finalSmallText = document.getElementById('finalSmallText');
         const finalAnimationContainer = document.getElementById('finalAnimationContainer');
         const finalActionBtn = document.getElementById('finalActionBtn');
 
         let currentSlide = 0;
         let autoTimer = null;
 
-        // Генерация данных (фиксированные значения для каждого слайда)
+        // Генерация данных
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
-        // Заранее генерируем звёзды для каждого слайда, чтобы итог был постоянным
+        // Заранее генерируем звёзды для каждого слайда
         const starsPerSlide = [
-            Math.floor(Math.random() * 31) + 20,   // слайд 0: 20-50
-            Math.floor(Math.random() * 21) + 30,   // слайд 1: 30-50
-            Math.floor(Math.random() * 36) + 40,   // слайд 2: 40-75
-            Math.floor(Math.random() * 151) + 100  // слайд 3: 100-250
+            Math.floor(Math.random() * 31) + 20,
+            Math.floor(Math.random() * 21) + 30,
+            Math.floor(Math.random() * 36) + 40,
+            Math.floor(Math.random() * 151) + 100
         ];
         const totalStars = starsPerSlide.reduce((a, b) => a + b, 0);
 
-        // Тексты слайдов
         const slides = [
             {
                 main: 'Telegram Premium',
@@ -445,7 +460,6 @@
             }
         ];
 
-        // Стикеры (JSON)
         const animations = [
             'prem.json',
             'send.json',
@@ -453,7 +467,6 @@
             'best.json'
         ];
 
-        // Градиенты фона
         const backgrounds = [
             'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)',
             'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)',
@@ -480,12 +493,11 @@
             });
         }
 
-        // Функция для применения анимации появления к элементам
         function applyFadeIn(elements) {
             elements.forEach(el => {
                 if (el) {
                     el.classList.remove('fade-in');
-                    void el.offsetWidth; // форсируем reflow
+                    void el.offsetWidth;
                     el.classList.add('fade-in');
                 }
             });
@@ -502,7 +514,6 @@
 
             loadAnimation(animationContainer, animations[index]);
 
-            // Используем заранее сгенерированные звёзды
             const stars = starsPerSlide[index];
             starsRewardEl.innerHTML = '';
             const textNode = document.createTextNode(`+${stars}`);
@@ -549,47 +560,41 @@
                     updateSlide(currentSlide);
                 }, 5000);
             } else {
-                // На последнем слайде таймер ведёт в финал
                 autoTimer = setTimeout(() => {
                     goToFinal();
                 }, 5000);
             }
         }
 
-        // Переход в финальный экран
         function goToFinal() {
-            // Останавливаем таймер
             if (autoTimer) clearTimeout(autoTimer);
 
-            // Скрываем слайды, показываем финал
             slidesContainer.style.display = 'none';
             finalContainer.style.display = 'flex';
 
-            // Устанавливаем голубой фон (как на втором слайде)
             document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
 
-            // Показываем общее количество звёзд
-            finalTotalEl.innerHTML = '';
+            // Отображаем общее количество звёзд
+            finalBigNumber.innerHTML = '';
             const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
-            finalTotalEl.appendChild(totalText);
-            finalTotalEl.appendChild(createStarIcon());
+            finalBigNumber.appendChild(totalText);
+            finalBigNumber.appendChild(createStarIcon());
 
-            // Загружаем стикер stars.json
+            // Можно добавить мелкий текст, например "звёзд", если нужно
+            finalSmallText.textContent = ''; // оставляем пустым или поставьте "звёзд"
+
             loadAnimation(finalAnimationContainer, 'stars.json');
 
-            // Анимация появления для финала (просто добавим класс к контейнеру)
             finalContainer.classList.remove('fade-in');
             void finalContainer.offsetWidth;
             finalContainer.classList.add('fade-in');
         }
 
-        // Обработчик кнопки "Продолжить"
         nextBtn.addEventListener('click', () => {
             if (currentSlide < slides.length - 1) {
                 currentSlide++;
                 updateSlide(currentSlide);
             } else {
-                // Последний слайд -> финал
                 goToFinal();
             }
         });
@@ -601,13 +606,10 @@
             }
         });
 
-        // Пока без логики на кнопке "Вывести"
         finalActionBtn.addEventListener('click', () => {
-            // Заглушка
             console.log('Вывести (логика пока не реализована)');
         });
 
-        // Инициализация первого слайда
         updateSlide(0);
 
         // ---- Фоновые звёзды (canvas) ----
@@ -663,7 +665,6 @@
         initStars();
         drawStars();
 
-        // Ripple эффект для всех кнопок
         document.querySelectorAll('.btn, .final-button').forEach(button => {
             button.addEventListener('touchstart', (e) => {
                 button.style.transform = 'scale(0.96)';
