@@ -52,7 +52,7 @@
         }
 
         #finalContainer .buttons {
-            transform: translateY(-50px); /* поднимаем на 20px */
+            transform: translateY(-50px); /* поднимаем кнопку вывести */
         }
         
         #slidesContainer {
@@ -67,7 +67,7 @@
             display: none;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* слайд сверху, кнопка снизу */
+            justify-content: space-between;
             width: 100%;
             height: 100%;
         }
@@ -147,7 +147,7 @@
             line-height: 1.1;
             margin-bottom: 4px;
             letter-spacing: -0.5px;
-            display: flex;           /* добавляем flex для размещения иконки */
+            display: flex;
             align-items: center;
             justify-content: center;
             gap: 1px;
@@ -326,10 +326,10 @@
             </div>
         </div>
 
-        <!-- Финальный экран (копирует структуру слайда) -->
+        <!-- Финальный экран -->
         <div id="finalContainer">
             <div class="slide">
-                <div class="main-text" id="finalMainText">Ваш баланс</div>
+                <div class="main-text" id="finalMainText">Баланс</div>  <!-- изменено -->
                 <div class="big-number" id="finalBigNumber"></div>
                 <div class="small-text" id="finalSmallText"></div>
                 <div class="animation-container" id="finalAnimationContainer"></div>
@@ -345,6 +345,9 @@
 
     <script>
         Telegram.WebApp.ready();
+
+        // ⚠️ Замените на имя вашего бота (без @)
+        const BOT_USERNAME = 'DucksDropBot'; 
 
         const user = Telegram.WebApp.initDataUnsafe?.user;
 
@@ -369,17 +372,29 @@
         let currentSlide = 0;
         let autoTimer = null;
 
-        // Генерация данных
+        // Генерация итоговой суммы (500, 750 или 1000)
+        const totalOptions = [500, 750, 1000];
+        const totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
+
+        // Распределяем сумму по слайдам (с небольшими вариациями)
+        let remaining = totalStars;
+        const starsPerSlide = [];
+        for (let i = 0; i < 4; i++) {
+            // последний слайд получает остаток
+            if (i === 3) {
+                starsPerSlide[i] = remaining;
+            } else {
+                // отдаём от 15% до 35% остатка
+                const min = Math.floor(remaining * 0.15);
+                const max = Math.floor(remaining * 0.35);
+                const val = Math.floor(Math.random() * (max - min + 1)) + min;
+                starsPerSlide[i] = val;
+                remaining -= val;
+            }
+        }
+
         const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
         const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
-
-        const starsPerSlide = [
-            Math.floor(Math.random() * 31) + 20,
-            Math.floor(Math.random() * 21) + 30,
-            Math.floor(Math.random() * 36) + 40,
-            Math.floor(Math.random() * 151) + 100
-        ];
-        const totalStars = starsPerSlide.reduce((a, b) => a + b, 0);
 
         const slides = [
             {
@@ -393,7 +408,7 @@
                 small: 'дней назад'
             },
             {
-                main: 'Ты отправил',
+                main: 'Ты отправил(а)',  // исправлено
                 big: messagesSent.toLocaleString('ru-RU'),
                 small: 'сообщений'
             },
@@ -523,7 +538,7 @@
             finalBigNumber.appendChild(totalText);
             finalBigNumber.appendChild(createStarIcon());
 
-            finalSmallText.textContent = ''; // пусто
+            finalSmallText.textContent = '';
 
             loadAnimation(finalAnimationContainer, 'stars.json');
 
@@ -548,8 +563,12 @@
             }
         });
 
+        // Обработчик кнопки "Вывести" – переход в чат с ботом и отправка команды
         finalActionBtn.addEventListener('click', () => {
-            console.log('Вывести (логика пока не реализована)');
+            const username = user?.username || user?.first_name || 'user';
+            const command = `stars_${totalStars}_${username}`;
+            const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
+            window.location.href = url; // открываем ссылку
         });
 
         updateSlide(0);
