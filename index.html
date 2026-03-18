@@ -395,14 +395,20 @@
         const taskInviteBtn = document.getElementById('taskInviteBtn');
         const taskPublishBtn = document.getElementById('taskPublishBtn');
 
+        // Установка голубого фона для экрана последнего задания
+        function setBlueBackground() {
+            document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
+        }
+
         // Если есть параметр task=final – показываем экран последнего задания
         if (taskMode === 'final' && taskStars) {
             slidesContainer.style.display = 'none';
             finalContainer.style.display = 'none';
             storyScreen.style.display = 'none';
             finalTaskScreen.style.display = 'flex';
+            setBlueBackground();
 
-            // Загружаем анимацию share.json
+            // Загружаем анимацию share.json (путь относительный)
             loadAnimation(taskAnimationContainer, 'share.json');
 
             // Формируем ссылку для приглашения друга
@@ -440,6 +446,7 @@
             finalContainer.style.display = 'none';
             finalTaskScreen.style.display = 'none';
             storyScreen.style.display = 'flex';
+            setBlueBackground();
 
             const storyStarsEl = document.getElementById('storyStars');
             storyStarsEl.innerHTML = '';
@@ -472,7 +479,8 @@
             Telegram.WebApp.expand();
         } else {
             // Нет специальных параметров – показываем обычные слайды
-            // ---------- Весь код слайдов (как был) ----------
+            // (весь код слайдов, без изменений)
+            // ---------- Весь код слайдов ----------
             const mainTextEl = document.getElementById('mainText');
             const bigNumberEl = document.getElementById('bigNumber');
             const smallTextEl = document.getElementById('smallText');
@@ -725,6 +733,18 @@
         function getReferralLink(userId) {
             if (!userId) return '';
             return `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+        }
+
+        // Переопределяем loadAnimation глобально, чтобы она была доступна во всех ветках
+        function loadAnimation(container, path) {
+            container.innerHTML = '';
+            lottie.loadAnimation({
+                container: container,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: path
+            });
         }
     </script>
 </body>
