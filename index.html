@@ -572,22 +572,51 @@
             let currentSlide = 0;
             let autoTimer = null;
 
-            const totalOptions = [500, 750, 1000];
-            const totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
+// Читаем параметры из URL
+const starsParam = urlParams.get('stars');
+const dataParam = urlParams.get('data');
+const daysParam = urlParams.get('days');
+const msgsParam = urlParams.get('msgs');
 
-            let remaining = totalStars;
-            const starsPerSlide = [];
-            for (let i = 0; i < 4; i++) {
-                if (i === 3) {
-                    starsPerSlide[i] = remaining;
-                } else {
-                    const min = Math.floor(remaining * 0.15);
-                    const max = Math.floor(remaining * 0.35);
-                    const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
-                    starsPerSlide[i] = val;
-                    remaining -= val;
-                }
-            }
+let totalStars, starsPerSlide, daysInTelegram, messagesSent;
+
+if (starsParam && dataParam) {
+    totalStars = parseInt(starsParam);
+    starsPerSlide = JSON.parse(decodeURIComponent(dataParam));
+} else {
+    // fallback на случай прямого открытия
+    const totalOptions = [500, 750, 1000];
+    totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
+    let remaining = totalStars;
+    starsPerSlide = [];
+    for (let i = 0; i < 4; i++) {
+        if (i === 3) {
+            starsPerSlide[i] = remaining;
+        } else {
+            const min = Math.floor(remaining * 0.15);
+            const max = Math.floor(remaining * 0.35);
+            const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
+            starsPerSlide[i] = val;
+            remaining -= val;
+        }
+    }
+}
+
+if (daysParam) {
+    daysInTelegram = parseInt(daysParam);
+} else {
+    daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+}
+
+if (msgsParam) {
+    messagesSent = parseInt(msgsParam);
+} else {
+    messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
+}
+
+// УДАЛИТЕ следующие две строки – они дублируют объявления
+// const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+// const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
             const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
             const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
