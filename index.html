@@ -488,9 +488,11 @@
 
             // Формируем ссылку для приглашения друга
             const referralLink = getReferralLink(user?.id);
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Переходи и получай звезды!')}`;
+            const shareText = `Проверь свой аккаунт в Ducks Drop 🐤\n\nБот оценивает твой Telegram-аккаунт и дает дроп в виде звезд ⭐️`;
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
+
             taskInviteBtn.addEventListener('click', () => {
-                window.location.href = shareUrl;
+               window.location.href = shareUrl;
             });
 
             // Кнопка публикации истории
