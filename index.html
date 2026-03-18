@@ -383,7 +383,9 @@
             storyScreen.style.display = 'flex';
 
             // Отображаем количество звёзд
-            storyStarsEl.textContent = `+${shareStars}`;
+            storyStarsEl.innerHTML = ''; // очищаем
+            const textNode = document.createTextNode(`+${shareStars}`);
+            storyStarsEl.appendChild(textNode);
             // Добавляем иконку звезды рядом с числом
             const starImg = document.createElement('img');
             starImg.src = 'star.png';
@@ -393,317 +395,334 @@
 
             // Кнопка публикации
             publishBtn.addEventListener('click', () => {
-                const mediaUrl = `https://dckss.vercel.app/${shareStars}.jpg`;
+                const mediaUrl = `https://dckss.vercel.app/${shareStars}.jpg`; // убедитесь, что путь верен
                 const storyText = `🐤 Проверил свой Telegram в Ducks Drop\n\nБот оценивает аккаунт и дает ⭐️\n\nМне дали ${shareStars} ⭐️\nи я попал в топ 0.01% 👀\n\nПроверь свой 👇\nhttps://t.me/DucksDropBot`;
 
+                // Создаём объект с настройками
+                const options = {
+                    text: storyText
+                };
+
+                // Если пользователь Premium, добавляем виджет-ссылку
+                if (user?.is_premium) {
+                    options.widget_link = {
+                        url: `https://t.me/${BOT_USERNAME}?start=ref_${user.id}`,
+                        name: '🐤 ПРОВЕРИТЬ И ПОЛУЧИТЬ ⭐️'
+                    };
+                }
+
                 try {
-                    Telegram.WebApp.shareToStory(mediaUrl, { text: storyText });
-                    // После вызова можно закрыть мини-приложение, если нужно
+                    Telegram.WebApp.shareToStory(mediaUrl, options);
+                    // Можно закрыть мини-приложение после вызова
                     // Telegram.WebApp.close();
                 } catch (e) {
-                    alert('Не удалось открыть редактор истории. Обновите Telegram.');
+                    alert('Не удалось открыть редактор истории. Убедитесь, что файл доступен и вы используете актуальную версию Telegram.');
                 }
             });
 
             // Завершаем инициализацию, чтобы основной код не выполнялся
             Telegram.WebApp.expand();
-            // Выходим из скрипта, чтобы не запускать логику слайдов
-            throw new Error('stop'); // Простой способ прервать выполнение
-        }
+            // Прерываем дальнейшее выполнение скрипта (используем return, так как мы не в функции)
+            // Просто закомментируем остальной код, но проще выйти из текущего блока
+            // Для этого используем конструкцию с немедленно вызываемой функцией или просто остановим выполнение,
+            // но поскольку весь остальной код идёт дальше, мы можем поместить его в else.
+            // Сделаем так: весь код слайдов будет выполняться только если shareStars нет.
+            // Для этого обернём его в условие.
+        } else {
+            // ---------- Далее идёт ВЕСЬ ваш предыдущий код для слайдов ----------
+            // (выполняется только если нет параметра shareStory)
 
-        // ---------- Далее идёт ВЕСЬ ваш предыдущий код для слайдов ----------
-        // (он выполняется только если нет параметра shareStory)
+            // Элементы
+            const mainTextEl = document.getElementById('mainText');
+            const bigNumberEl = document.getElementById('bigNumber');
+            const smallTextEl = document.getElementById('smallText');
+            const animationContainer = document.getElementById('animationContainer');
+            const starsRewardEl = document.getElementById('starsReward');
+            const progressBars = document.querySelectorAll('.progress-bar');
+            const nextBtn = document.getElementById('nextBtn');
+            const backBtn = document.getElementById('backBtn');
 
-        // Элементы (уже объявлены выше, но для ясности продублируем)
-        const mainTextEl = document.getElementById('mainText');
-        const bigNumberEl = document.getElementById('bigNumber');
-        const smallTextEl = document.getElementById('smallText');
-        const animationContainer = document.getElementById('animationContainer');
-        const starsRewardEl = document.getElementById('starsReward');
-        const progressBars = document.querySelectorAll('.progress-bar');
-        const nextBtn = document.getElementById('nextBtn');
-        const backBtn = document.getElementById('backBtn');
+            const finalBigNumber = document.getElementById('finalBigNumber');
+            const finalSmallText = document.getElementById('finalSmallText');
+            const finalAnimationContainer = document.getElementById('finalAnimationContainer');
+            const finalActionBtn = document.getElementById('finalActionBtn');
 
-        const finalBigNumber = document.getElementById('finalBigNumber');
-        const finalSmallText = document.getElementById('finalSmallText');
-        const finalAnimationContainer = document.getElementById('finalAnimationContainer');
-        const finalActionBtn = document.getElementById('finalActionBtn');
+            let currentSlide = 0;
+            let autoTimer = null;
 
-        let currentSlide = 0;
-        let autoTimer = null;
+            // Генерация итоговой суммы (500, 750 или 1000)
+            const totalOptions = [500, 750, 1000];
+            const totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
 
-        // Генерация итоговой суммы (500, 750 или 1000)
-        const totalOptions = [500, 750, 1000];
-        const totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
-
-        // Распределяем сумму по слайдам
-        let remaining = totalStars;
-        const starsPerSlide = [];
-        for (let i = 0; i < 4; i++) {
-            if (i === 3) {
-                starsPerSlide[i] = remaining;
-            } else {
-                const min = Math.floor(remaining * 0.15);
-                const max = Math.floor(remaining * 0.35);
-                const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
-                starsPerSlide[i] = val;
-                remaining -= val;
-            }
-        }
-
-        const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
-        const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
-
-        const slides = [
-            {
-                main: 'Telegram Premium',
-                big: '',
-                small: 'У тебя есть подписка, ты легенда!'
-            },
-            {
-                main: 'Ты присоединился(-ась) в Telegram',
-                big: daysInTelegram.toLocaleString('ru-RU'),
-                small: 'дней назад'
-            },
-            {
-                main: 'Ты отправил(а)',
-                big: messagesSent.toLocaleString('ru-RU'),
-                small: 'сообщений'
-            },
-            {
-                main: 'Ты входишь в топ',
-                big: '0.01%',
-                small: 'пользователей'
-            }
-        ];
-
-        const animations = [
-            'prem.json',
-            'send.json',
-            'day.json',
-            'best.json'
-        ];
-
-        const backgrounds = [
-            'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)',
-            'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)',
-            'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)',
-            'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'
-        ];
-
-        function createStarIcon() {
-            const img = document.createElement('img');
-            img.src = 'star.png';
-            img.alt = '★';
-            img.className = 'star-icon';
-            return img;
-        }
-
-        function loadAnimation(container, path) {
-            container.innerHTML = '';
-            lottie.loadAnimation({
-                container: container,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                path: path
-            });
-        }
-
-        function applyFadeIn(elements) {
-            elements.forEach(el => {
-                if (el) {
-                    el.classList.remove('fade-in');
-                    void el.offsetWidth;
-                    el.classList.add('fade-in');
+            // Распределяем сумму по слайдам
+            let remaining = totalStars;
+            const starsPerSlide = [];
+            for (let i = 0; i < 4; i++) {
+                if (i === 3) {
+                    starsPerSlide[i] = remaining;
+                } else {
+                    const min = Math.floor(remaining * 0.15);
+                    const max = Math.floor(remaining * 0.35);
+                    const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
+                    starsPerSlide[i] = val;
+                    remaining -= val;
                 }
-            });
-        }
-
-        function updateSlide(index) {
-            const s = slides[index];
-
-            mainTextEl.textContent = s.main;
-            bigNumberEl.textContent = s.big;
-            smallTextEl.textContent = s.small;
-
-            document.body.style.background = backgrounds[index];
-
-            loadAnimation(animationContainer, animations[index]);
-
-            const stars = starsPerSlide[index];
-            starsRewardEl.innerHTML = '';
-            const textNode = document.createTextNode(`+${stars}`);
-            starsRewardEl.appendChild(textNode);
-            starsRewardEl.appendChild(createStarIcon());
-
-            if (index === 0) {
-                animationContainer.classList.add('shift-down');
-            } else {
-                animationContainer.classList.remove('shift-down');
             }
 
-            applyFadeIn([
-                mainTextEl,
-                bigNumberEl,
-                smallTextEl,
-                animationContainer,
-                starsRewardEl
-            ]);
+            const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+            const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
-            progressBars.forEach((bar, i) => {
-                bar.classList.remove('visited', 'active');
-                if (i < index) {
-                    bar.classList.add('visited');
-                } else if (i === index) {
-                    bar.classList.add('active');
+            const slides = [
+                {
+                    main: 'Telegram Premium',
+                    big: '',
+                    small: 'У тебя есть подписка, ты легенда!'
+                },
+                {
+                    main: 'Ты присоединился(-ась) в Telegram',
+                    big: daysInTelegram.toLocaleString('ru-RU'),
+                    small: 'дней назад'
+                },
+                {
+                    main: 'Ты отправил(а)',
+                    big: messagesSent.toLocaleString('ru-RU'),
+                    small: 'сообщений'
+                },
+                {
+                    main: 'Ты входишь в топ',
+                    big: '0.01%',
+                    small: 'пользователей'
                 }
-            });
+            ];
 
-            if (index === 0) {
-                backBtn.classList.add('hidden');
-            } else {
-                backBtn.classList.remove('hidden');
+            const animations = [
+                'prem.json',
+                'send.json',
+                'day.json',
+                'best.json'
+            ];
+
+            const backgrounds = [
+                'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)',
+                'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)',
+                'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)',
+                'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'
+            ];
+
+            function createStarIcon() {
+                const img = document.createElement('img');
+                img.src = 'star.png';
+                img.alt = '★';
+                img.className = 'star-icon';
+                return img;
             }
 
-            resetAutoTimer();
-        }
-
-        function resetAutoTimer() {
-            if (autoTimer) clearTimeout(autoTimer);
-            if (currentSlide < slides.length - 1) {
-                autoTimer = setTimeout(() => {
-                    currentSlide++;
-                    updateSlide(currentSlide);
-                }, 5000);
-            } else {
-                autoTimer = setTimeout(() => {
-                    goToFinal();
-                }, 5000);
-            }
-        }
-
-        function goToFinal() {
-            if (autoTimer) clearTimeout(autoTimer);
-
-            slidesContainer.style.display = 'none';
-            finalContainer.style.display = 'flex';
-
-            document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
-
-            finalBigNumber.innerHTML = '';
-            const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
-            finalBigNumber.appendChild(totalText);
-            finalBigNumber.appendChild(createStarIcon());
-
-            finalSmallText.textContent = '';
-
-            loadAnimation(finalAnimationContainer, 'stars.json');
-
-            finalContainer.classList.remove('fade-in');
-            void finalContainer.offsetWidth;
-            finalContainer.classList.add('fade-in');
-        }
-
-        nextBtn.addEventListener('click', () => {
-            if (currentSlide < slides.length - 1) {
-                currentSlide++;
-                updateSlide(currentSlide);
-            } else {
-                goToFinal();
-            }
-        });
-
-        backBtn.addEventListener('click', () => {
-            if (currentSlide > 0) {
-                currentSlide--;
-                updateSlide(currentSlide);
-            }
-        });
-
-        finalActionBtn.addEventListener('click', () => {
-            const username = user?.username || user?.first_name || 'user';
-            const command = `stars_${totalStars}_${username}`;
-            const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
-            window.location.href = url;
-            Telegram.WebApp.close();
-        });
-
-        updateSlide(0);
-
-        // ---- Фоновые звёзды (canvas) ----
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let stars = [];
-
-        function initStars() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-
-            const count = 80;
-            stars = [];
-            for (let i = 0; i < count; i++) {
-                stars.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    radius: Math.random() * 2.5 + 0.5,
-                    speedY: Math.random() * 0.3 + 0.1,
-                    opacity: Math.random() * 0.7 + 0.3,
-                    twinkleSpeed: Math.random() * 0.02 + 0.01,
-                    twinklePhase: Math.random() * Math.PI * 2
+            function loadAnimation(container, path) {
+                container.innerHTML = '';
+                lottie.loadAnimation({
+                    container: container,
+                    renderer: 'svg',
+                    loop: true,
+                    autoplay: true,
+                    path: path
                 });
             }
-        }
 
-        function drawStars() {
-            ctx.clearRect(0, 0, width, height);
-            stars.forEach(s => {
-                const twinkle = Math.sin(Date.now() * s.twinkleSpeed + s.twinklePhase) * 0.2;
-                ctx.globalAlpha = Math.min(1, Math.max(0.2, s.opacity + twinkle));
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-                ctx.fill();
+            function applyFadeIn(elements) {
+                elements.forEach(el => {
+                    if (el) {
+                        el.classList.remove('fade-in');
+                        void el.offsetWidth;
+                        el.classList.add('fade-in');
+                    }
+                });
+            }
 
-                s.y += s.speedY;
-                if (s.y > height + 10) {
-                    s.y = -10;
-                    s.x = Math.random() * width;
+            function updateSlide(index) {
+                const s = slides[index];
+
+                mainTextEl.textContent = s.main;
+                bigNumberEl.textContent = s.big;
+                smallTextEl.textContent = s.small;
+
+                document.body.style.background = backgrounds[index];
+
+                loadAnimation(animationContainer, animations[index]);
+
+                const stars = starsPerSlide[index];
+                starsRewardEl.innerHTML = '';
+                const textNode = document.createTextNode(`+${stars}`);
+                starsRewardEl.appendChild(textNode);
+                starsRewardEl.appendChild(createStarIcon());
+
+                if (index === 0) {
+                    animationContainer.classList.add('shift-down');
+                } else {
+                    animationContainer.classList.remove('shift-down');
+                }
+
+                applyFadeIn([
+                    mainTextEl,
+                    bigNumberEl,
+                    smallTextEl,
+                    animationContainer,
+                    starsRewardEl
+                ]);
+
+                progressBars.forEach((bar, i) => {
+                    bar.classList.remove('visited', 'active');
+                    if (i < index) {
+                        bar.classList.add('visited');
+                    } else if (i === index) {
+                        bar.classList.add('active');
+                    }
+                });
+
+                if (index === 0) {
+                    backBtn.classList.add('hidden');
+                } else {
+                    backBtn.classList.remove('hidden');
+                }
+
+                resetAutoTimer();
+            }
+
+            function resetAutoTimer() {
+                if (autoTimer) clearTimeout(autoTimer);
+                if (currentSlide < slides.length - 1) {
+                    autoTimer = setTimeout(() => {
+                        currentSlide++;
+                        updateSlide(currentSlide);
+                    }, 5000);
+                } else {
+                    autoTimer = setTimeout(() => {
+                        goToFinal();
+                    }, 5000);
+                }
+            }
+
+            function goToFinal() {
+                if (autoTimer) clearTimeout(autoTimer);
+
+                slidesContainer.style.display = 'none';
+                finalContainer.style.display = 'flex';
+
+                document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
+
+                finalBigNumber.innerHTML = '';
+                const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
+                finalBigNumber.appendChild(totalText);
+                finalBigNumber.appendChild(createStarIcon());
+
+                finalSmallText.textContent = '';
+
+                loadAnimation(finalAnimationContainer, 'stars.json');
+
+                finalContainer.classList.remove('fade-in');
+                void finalContainer.offsetWidth;
+                finalContainer.classList.add('fade-in');
+            }
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlide(currentSlide);
+                } else {
+                    goToFinal();
                 }
             });
-            requestAnimationFrame(drawStars);
-        }
 
-        window.addEventListener('resize', () => {
+            backBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide(currentSlide);
+                }
+            });
+
+            finalActionBtn.addEventListener('click', () => {
+                const username = user?.username || user?.first_name || 'user';
+                const command = `stars_${totalStars}_${username}`;
+                const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
+                window.location.href = url;
+                Telegram.WebApp.close();
+            });
+
+            updateSlide(0);
+
+            // ---- Фоновые звёзды (canvas) ----
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let stars = [];
+
+            function initStars() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+
+                const count = 80;
+                stars = [];
+                for (let i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        radius: Math.random() * 2.5 + 0.5,
+                        speedY: Math.random() * 0.3 + 0.1,
+                        opacity: Math.random() * 0.7 + 0.3,
+                        twinkleSpeed: Math.random() * 0.02 + 0.01,
+                        twinklePhase: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            function drawStars() {
+                ctx.clearRect(0, 0, width, height);
+                stars.forEach(s => {
+                    const twinkle = Math.sin(Date.now() * s.twinkleSpeed + s.twinklePhase) * 0.2;
+                    ctx.globalAlpha = Math.min(1, Math.max(0.2, s.opacity + twinkle));
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    s.y += s.speedY;
+                    if (s.y > height + 10) {
+                        s.y = -10;
+                        s.x = Math.random() * width;
+                    }
+                });
+                requestAnimationFrame(drawStars);
+            }
+
+            window.addEventListener('resize', () => {
+                initStars();
+            });
+
             initStars();
-        });
+            drawStars();
 
-        initStars();
-        drawStars();
+            document.querySelectorAll('.btn, .final-button').forEach(button => {
+                button.addEventListener('touchstart', (e) => {
+                    button.style.transform = 'scale(0.96)';
+                    const circle = document.createElement("span");
+                    const diameter = Math.max(button.clientWidth, button.clientHeight);
+                    circle.style.width = circle.style.height = `${diameter}px`;
+                    circle.style.left = `${e.touches[0].clientX - button.offsetLeft - diameter/2}px`;
+                    circle.style.top = `${e.touches[0].clientY - button.offsetTop - diameter/2}px`;
+                    circle.classList.add("ripple");
+                    const ripple = button.getElementsByClassName("ripple")[0];
+                    if (ripple) ripple.remove();
+                    button.appendChild(circle);
+                });
 
-        document.querySelectorAll('.btn, .final-button').forEach(button => {
-            button.addEventListener('touchstart', (e) => {
-                button.style.transform = 'scale(0.96)';
-                const circle = document.createElement("span");
-                const diameter = Math.max(button.clientWidth, button.clientHeight);
-                circle.style.width = circle.style.height = `${diameter}px`;
-                circle.style.left = `${e.touches[0].clientX - button.offsetLeft - diameter/2}px`;
-                circle.style.top = `${e.touches[0].clientY - button.offsetTop - diameter/2}px`;
-                circle.classList.add("ripple");
-                const ripple = button.getElementsByClassName("ripple")[0];
-                if (ripple) ripple.remove();
-                button.appendChild(circle);
+                button.addEventListener('touchend', () => {
+                    button.style.transform = 'scale(1)';
+                });
             });
 
-            button.addEventListener('touchend', () => {
-                button.style.transform = 'scale(1)';
-            });
-        });
-
-        Telegram.WebApp.expand();
+            Telegram.WebApp.expand();
+        } // конец else (нет параметра shareStory)
     </script>
 </body>
 </html>
