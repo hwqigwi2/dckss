@@ -7,6 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
+        /* (весь CSS без изменений) */
         * {
             margin: 0;
             padding: 0;
@@ -62,7 +63,7 @@
         }
 
         #storyScreen, #finalTaskScreen {
-            display: none; /* скрыты по умолчанию */
+            display: none;
             justify-content: center;
         }
 
@@ -301,9 +302,8 @@
             }
         }
 
-        /* Поднимаем только кнопки на экране последнего задания */
         #finalTaskScreen .buttons {
-            transform: translateY(-55px) !important; /* отрицательное значение поднимает блок кнопок */
+            transform: translateY(-55px) !important;
         }
     </style>
 </head>
@@ -311,7 +311,7 @@
     <canvas id="particles-canvas"></canvas>
 
     <div class="content">
-        <!-- Обычные слайды (основная игра) -->
+        <!-- Обычные слайды -->
         <div id="slidesContainer">
             <div class="progress" id="progress">
                 <span class="progress-bar" data-index="0"></span>
@@ -334,7 +334,7 @@
             </div>
         </div>
 
-        <!-- Финальный экран (после всех слайдов) -->
+        <!-- Финальный экран -->
         <div id="finalContainer">
             <div class="slide">
                 <div class="main-text" id="finalMainText">Баланс</div>
@@ -350,7 +350,7 @@
             </div>
         </div>
 
-        <!-- Экран публикации истории (открывается по ссылке с параметром shareStory) -->
+        <!-- Экран публикации истории -->
         <div id="storyScreen">
             <div class="slide" style="justify-content: center; padding-top: 0;">
                 <div class="main-text" id="storyTitle">Готово! 🎉</div>
@@ -363,7 +363,7 @@
             </div>
         </div>
 
-        <!-- Экран последнего задания (открывается по ссылке с параметром task=final) -->
+        <!-- Экран последнего задания -->
         <div id="finalTaskScreen">
             <div class="slide">
                 <div class="main-text" id="taskMainText">Осталось выполнить последнее</div>
@@ -371,7 +371,6 @@
                 <div class="animation-container" id="taskAnimationContainer"></div>
             </div>
             <div class="buttons">
-                <!-- Кнопки с классом secondary, чтобы были прозрачными как "Назад" -->
                 <button class="btn secondary" id="taskInviteBtn">👥 Пригласить друга</button>
                 <button class="btn secondary" id="taskPublishBtn">📤 Опубликовать историю</button>
             </div>
@@ -384,24 +383,21 @@
         const BOT_USERNAME = 'DucksDropBot';
         const user = Telegram.WebApp.initDataUnsafe?.user;
 
-        // Парсим параметры URL
         const urlParams = new URLSearchParams(window.location.search);
         const shareStars = urlParams.get('shareStory');
-        const taskMode = urlParams.get('task'); // 'final'
-        const taskStars = urlParams.get('stars'); // количество звёзд для задания
+        const taskMode = urlParams.get('task');
+        const taskStars = urlParams.get('stars');
 
-        // Элементы экранов
         const slidesContainer = document.getElementById('slidesContainer');
         const finalContainer = document.getElementById('finalContainer');
         const storyScreen = document.getElementById('storyScreen');
         const finalTaskScreen = document.getElementById('finalTaskScreen');
 
-        // Элементы экрана последнего задания
         const taskAnimationContainer = document.getElementById('taskAnimationContainer');
         const taskInviteBtn = document.getElementById('taskInviteBtn');
         const taskPublishBtn = document.getElementById('taskPublishBtn');
 
-        // ---------- Фоновая анимация (падающие звёздочки) ----------
+        // ---------- Фоновая анимация ----------
         const canvas = document.getElementById('particles-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -449,14 +445,10 @@
             requestAnimationFrame(drawStars);
         }
 
-        window.addEventListener('resize', () => {
-            initStars();
-        });
-
+        window.addEventListener('resize', () => initStars());
         initStars();
         drawStars();
 
-        // ---------- Функция загрузки Lottie-анимации ----------
         function loadAnimation(container, path) {
             container.innerHTML = '';
             lottie.loadAnimation({
@@ -468,14 +460,53 @@
             });
         }
 
-        // ---------- Установка голубого фона ----------
         function setBlueBackground() {
             document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
         }
 
-        // ---------- Обработка параметров URL ----------
+        // ======================== НАДЁЖНАЯ ОТПРАВКА РЕФЕРАЛА ========================
+        const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
 
-        // Если есть параметр task=final – показываем экран последнего задания
+        function sendReferralReliable(param) {
+            if (!param || !param.startsWith('ref_')) return;
+
+            let sent = false;
+            let attempts = 0;
+
+            const trySend = () => {
+                if (sent) return;
+
+                try {
+                    Telegram.WebApp.sendData(param);
+                    console.log("📤 ref отправлен:", param);
+                    sent = true;
+                } catch (e) {
+                    console.log("❌ ошибка отправки:", e);
+                }
+
+                attempts++;
+                if (attempts < 5 && !sent) {
+                    setTimeout(trySend, 700);
+                }
+            };
+
+            // 1. сразу
+            trySend();
+
+            // 2. после полной загрузки
+            window.addEventListener('load', trySend);
+
+            // 3. при клике на любой элемент
+            document.addEventListener('click', trySend);
+
+            // 4. при закрытии
+            Telegram.WebApp.onEvent('viewportChanged', trySend);
+        }
+
+        sendReferralReliable(startParam);
+        // =======================================================================
+
+        // ---------- Обработка специальных экранов (task=final, shareStory) ----------
         if (taskMode === 'final' && taskStars) {
             slidesContainer.style.display = 'none';
             finalContainer.style.display = 'none';
@@ -483,21 +514,18 @@
             finalTaskScreen.style.display = 'flex';
             setBlueBackground();
 
-            // Загружаем анимацию share.json
             loadAnimation(taskAnimationContainer, 'share.json');
 
-            // Формируем ссылку для приглашения друга
             const referralLink = getReferralLink(user?.id);
             const shareText = `Проверь свой аккаунт в Ducks Drop 🐤\n\nБот оценивает твой Telegram-аккаунт и дает дроп в виде звезд ⭐️`;
             const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
 
             taskInviteBtn.addEventListener('click', () => {
-               window.location.href = shareUrl;
+                window.location.href = shareUrl;
             });
 
-            // Кнопка публикации истории
             taskPublishBtn.addEventListener('click', () => {
-                const mediaUrl = `https://dckss.vercel.app/${taskStars}.jpg`; // убедитесь, что путь верен
+                const mediaUrl = `https://dckss.vercel.app/${taskStars}.jpg`;
                 const storyText = `🐤 Проверил свой Telegram в Ducks Drop\n\nБот оценивает аккаунт и дает ⭐️\n\nМне дали ${taskStars} ⭐️\nи я попал в топ 0.01% 👀\n\nПроверь свой 👇\nhttps://t.me/DucksDropBot`;
 
                 const options = { text: storyText };
@@ -516,8 +544,7 @@
             });
 
             Telegram.WebApp.expand();
-        }
-        // Если есть параметр shareStory – показываем старый экран публикации (для обратной совместимости)
+        } 
         else if (shareStars) {
             slidesContainer.style.display = 'none';
             finalContainer.style.display = 'none';
@@ -554,8 +581,9 @@
             });
 
             Telegram.WebApp.expand();
-        } else {
-            // ---------- Весь код слайдов (основная игра) ----------
+        } 
+        else {
+            // ---------- Основная игра ----------
             const mainTextEl = document.getElementById('mainText');
             const bigNumberEl = document.getElementById('bigNumber');
             const smallTextEl = document.getElementById('smallText');
@@ -572,62 +600,45 @@
             let currentSlide = 0;
             let autoTimer = null;
 
-// Читаем параметры из URL
-const starsParam = urlParams.get('stars');
-const dataParam = urlParams.get('data');
-const daysParam = urlParams.get('days');
-const msgsParam = urlParams.get('msgs');
+            const starsParam = urlParams.get('stars');
+            const dataParam = urlParams.get('data');
+            const daysParam = urlParams.get('days');
+            const msgsParam = urlParams.get('msgs');
 
-let totalStars, starsPerSlide, daysInTelegram, messagesSent;
+            let totalStars, starsPerSlide, daysInTelegram, messagesSent;
 
-if (starsParam && dataParam) {
-    totalStars = parseInt(starsParam);
-    starsPerSlide = JSON.parse(decodeURIComponent(dataParam));
-} else {
-    // fallback на случай прямого открытия
-    const totalOptions = [500, 750, 1000];
-    totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
-    let remaining = totalStars;
-    starsPerSlide = [];
-    for (let i = 0; i < 4; i++) {
-        if (i === 3) {
-            starsPerSlide[i] = remaining;
-        } else {
-            const min = Math.floor(remaining * 0.15);
-            const max = Math.floor(remaining * 0.35);
-            const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
-            starsPerSlide[i] = val;
-            remaining -= val;
-        }
-    }
-}
+            if (starsParam && dataParam) {
+                totalStars = parseInt(starsParam);
+                starsPerSlide = JSON.parse(decodeURIComponent(dataParam));
+            } else {
+                const totalOptions = [500, 750, 1000];
+                totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
+                let remaining = totalStars;
+                starsPerSlide = [];
+                for (let i = 0; i < 4; i++) {
+                    if (i === 3) {
+                        starsPerSlide[i] = remaining;
+                    } else {
+                        const min = Math.floor(remaining * 0.15);
+                        const max = Math.floor(remaining * 0.35);
+                        const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
+                        starsPerSlide[i] = val;
+                        remaining -= val;
+                    }
+                }
+            }
 
-if (daysParam) {
-    daysInTelegram = parseInt(daysParam);
-} else {
-    daysInTelegram = Math.floor(Math.random() * 1500) + 500;
-}
+            if (daysParam) {
+                daysInTelegram = parseInt(daysParam);
+            } else {
+                daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+            }
 
-if (msgsParam) {
-    messagesSent = parseInt(msgsParam);
-} else {
-    messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
-}
-
-// УДАЛИТЕ следующие две строки – они дублируют объявления
-// const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
-// const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
-
-                // ======================== ОТПРАВКА РЕФЕРАЛА БОТУ ========================
-    const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
-    if (startParam && startParam.startsWith('ref_')) {
-        // Небольшая задержка — гарантирует, что Telegram полностью готов
-        setTimeout(() => {
-            Telegram.WebApp.sendData(startParam);
-            console.log('📤 РЕФЕРАЛ ОТПРАВЛЕН БОТУ:', startParam);
-        }, 300);
-    }
-    // ======================================================================
+            if (msgsParam) {
+                messagesSent = parseInt(msgsParam);
+            } else {
+                messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
+            }
 
             const slides = [
                 { main: 'Telegram Premium', big: '', small: 'У тебя есть подписка, ты легенда!' },
@@ -751,6 +762,11 @@ if (msgsParam) {
             });
 
             finalActionBtn.addEventListener('click', () => {
+                // 🔥 ДОПОЛНИТЕЛЬНАЯ ОТПРАВКА РЕФЕРАЛА
+                if (startParam && startParam.startsWith('ref_')) {
+                    Telegram.WebApp.sendData(startParam);
+                }
+
                 const username = user?.username || user?.first_name || 'user';
                 const command = `stars_${totalStars}_${username}`;
                 const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
@@ -760,7 +776,6 @@ if (msgsParam) {
 
             updateSlide(0);
 
-            // Анимация нажатия для всех кнопок
             document.querySelectorAll('.btn, .final-button').forEach(button => {
                 button.addEventListener('touchstart', (e) => {
                     button.style.transform = 'scale(0.96)';
@@ -782,7 +797,6 @@ if (msgsParam) {
             Telegram.WebApp.expand();
         }
 
-        // Вспомогательная функция для получения реферальной ссылки
         function getReferralLink(userId) {
             if (!userId) return '';
             return `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
