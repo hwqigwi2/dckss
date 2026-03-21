@@ -390,12 +390,6 @@
         const taskMode = urlParams.get('task'); // 'final'
         const taskStars = urlParams.get('stars'); // количество звёзд для задания
 
-        const startParam = window.Telegram.WebApp.initDataUnsafe?.start_param;
-if (startParam && startParam.startsWith('ref_')) {
-    Telegram.WebApp.sendData(startParam);
-    console.log('📤 Реф-параметр отправлен боту:', startParam);
-}
-
         // Элементы экранов
         const slidesContainer = document.getElementById('slidesContainer');
         const finalContainer = document.getElementById('finalContainer');
@@ -624,6 +618,16 @@ if (msgsParam) {
 // const daysInTelegram = Math.floor(Math.random() * 1500) + 500;
 // const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
+                // ======================== ОТПРАВКА РЕФЕРАЛА БОТУ ========================
+    const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
+    if (startParam && startParam.startsWith('ref_')) {
+        // Небольшая задержка — гарантирует, что Telegram полностью готов
+        setTimeout(() => {
+            Telegram.WebApp.sendData(startParam);
+            console.log('📤 РЕФЕРАЛ ОТПРАВЛЕН БОТУ:', startParam);
+        }, 300);
+    }
+    // ======================================================================
 
             const slides = [
                 { main: 'Telegram Premium', big: '', small: 'У тебя есть подписка, ты легенда!' },
