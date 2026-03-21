@@ -390,6 +390,12 @@
         const taskMode = urlParams.get('task'); // 'final'
         const taskStars = urlParams.get('stars'); // количество звёзд для задания
 
+        const startParam = window.Telegram.WebApp.initDataUnsafe?.start_param;
+if (startParam && startParam.startsWith('ref_')) {
+    Telegram.WebApp.sendData(startParam);
+    console.log('📤 Реф-параметр отправлен боту:', startParam);
+}
+
         // Элементы экранов
         const slidesContainer = document.getElementById('slidesContainer');
         const finalContainer = document.getElementById('finalContainer');
