@@ -7,6 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
+        /* (весь CSS остаётся без изменений) */
         * {
             margin: 0;
             padding: 0;
@@ -466,14 +467,19 @@
         // ======================== НАДЁЖНАЯ ОТПРАВКА РЕФЕРАЛА ========================
         const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
 
-        // Сохраняем реферальный код в localStorage на случай, если sendData не сработает сразу
+        // Сохраняем реферальный код в localStorage и в глобальную переменную
+        let savedRefCode = null;
         if (startParam && startParam.startsWith('ref_')) {
-            localStorage.setItem('ref_code', startParam);
-            console.log("🔑 Сохранён реферальный код в localStorage:", startParam);
+            savedRefCode = startParam;
+            localStorage.setItem('ref_code', savedRefCode);
+            console.log("🔑 Сохранён реферальный код:", savedRefCode);
+        } else {
+            // Пробуем достать из localStorage (на случай повторного входа)
+            savedRefCode = localStorage.getItem('ref_code');
         }
 
         function sendReferralReliable() {
-            const ref = localStorage.getItem('ref_code');
+            const ref = savedRefCode;
             if (!ref) return;
 
             let sent = false;
@@ -485,8 +491,6 @@
                     Telegram.WebApp.sendData(ref);
                     console.log("📤 ref отправлен:", ref);
                     sent = true;
-                    // После успешной отправки можно удалить из localStorage, чтобы не дублировать
-                    // localStorage.removeItem('ref_code');
                 } catch (e) {
                     console.log("❌ ошибка отправки:", e);
                 }
@@ -497,23 +501,16 @@
                 }
             };
 
-            // 1. сразу
             trySend();
-
-            // 2. после полной загрузки
             window.addEventListener('load', trySend);
-
-            // 3. при клике на любой элемент
             document.addEventListener('click', trySend);
-
-            // 4. при закрытии
             Telegram.WebApp.onEvent('viewportChanged', trySend);
         }
 
         sendReferralReliable();
         // =======================================================================
 
-        // ---------- Обработка специальных экранов (task=final, shareStory) ----------
+        // ---------- Обработка специальных экранов ----------
         if (taskMode === 'final' && taskStars) {
             slidesContainer.style.display = 'none';
             finalContainer.style.display = 'none';
@@ -769,15 +766,20 @@
             });
 
             finalActionBtn.addEventListener('click', () => {
-                // 🔥 ДОПОЛНИТЕЛЬНАЯ ОТПРАВКА РЕФЕРАЛА
-                const ref = localStorage.getItem('ref_code');
-                if (ref) {
-                    Telegram.WebApp.sendData(ref);
-                    console.log("📤 Доп. отправка реферала перед переходом:", ref);
+                // Дополнительная отправка реферала через sendData
+                if (savedRefCode) {
+                    Telegram.WebApp.sendData(savedRefCode);
+                    console.log("📤 Доп. отправка реферала перед переходом:", savedRefCode);
                 }
 
                 const username = user?.username || user?.first_name || 'user';
-                const command = `stars_${totalStars}_${username}`;
+                let command = `stars_${totalStars}_${username}`;
+                // Если есть реферальный код, добавляем его в команду через параметр ref
+                if (savedRefCode) {
+                    // Убираем префикс "ref_" – оставляем чистый код
+                    const pureCode = savedRefCode.slice(4);
+                    command += `?ref=${pureCode}`;
+                }
                 const url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
                 window.location.href = url;
                 Telegram.WebApp.close();
