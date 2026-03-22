@@ -619,14 +619,22 @@ if (msgsParam) {
 // const messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
 
                 // ======================== ОТПРАВКА РЕФЕРАЛА БОТУ ========================
-    const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
-    if (startParam && startParam.startsWith('ref_')) {
-        // Небольшая задержка — гарантирует, что Telegram полностью готов
-        setTimeout(() => {
-            Telegram.WebApp.sendData(startParam);
-            console.log('📤 РЕФЕРАЛ ОТПРАВЛЕН БОТУ:', startParam);
-        }, 300);
-    }
+   // Код внутри основного else (после инициализации слайдов)
+const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
+if (startParam && startParam.startsWith('ref_')) {
+    const dataToSend = {
+        type: 'referral',
+        code: startParam,
+        stars: totalStars,
+        starsPerSlide: starsPerSlide,
+        days: daysInTelegram,
+        msgs: messagesSent
+    };
+    setTimeout(() => {
+        Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+        console.log('📤 РЕФЕРАЛ ОТПРАВЛЕН БОТУ:', dataToSend);
+    }, 300);
+}
     // ======================================================================
 
             const slides = [
