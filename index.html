@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>💖 Варя, я тебя люблю 💖</title>
-  <!-- Шрифты для романтичного настроения -->
+  <!-- Шрифты -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Pacifico&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
-  <!-- Font Awesome для иконок -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     * {
@@ -28,7 +28,7 @@
       padding: 12px;
     }
 
-    /* Canvas для падающих лепестков */
+    /* Canvas лепестков */
     #petals-canvas {
       position: fixed;
       top: 0;
@@ -39,7 +39,7 @@
       z-index: 1;
     }
 
-    /* Основной контейнер — мобильная оптимизация */
+    /* Главный контейнер */
     .container {
       position: relative;
       z-index: 10;
@@ -63,7 +63,6 @@
       100% { transform: translateY(-8px); box-shadow: 0 25px 55px rgba(0,0,0,0.6), 0 0 0 3px rgba(255, 200, 220, 0.4), 0 0 45px rgba(255, 120, 180, 0.6); }
     }
 
-    /* Заголовок — крупнее на мобильных */
     .top-message {
       font-family: 'Pacifico', cursive;
       color: #ffe4f2;
@@ -86,7 +85,7 @@
       letter-spacing: 1px;
     }
 
-    /* Обёртка сердца с изображением */
+    /* Сердце-картинка */
     .heart-wrapper {
       display: flex;
       justify-content: center;
@@ -96,7 +95,6 @@
       filter: drop-shadow(0 0 20px #ff2a5e) drop-shadow(0 0 8px #ffb0c7);
       transition: transform 0.2s;
       -webkit-tap-highlight-color: transparent;
-      /* Увеличиваем область касания */
       padding: 10px;
     }
 
@@ -104,7 +102,6 @@
       transform: scale(0.96);
     }
 
-    /* Само изображение сердца */
     .heart-image {
       display: block;
       width: 140px;
@@ -113,12 +110,11 @@
       object-fit: contain;
       animation: heartbeat 1.8s infinite ease-in-out;
       transform-origin: center;
-      pointer-events: none; /* клик обрабатывается обёрткой */
+      pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
     }
 
-    /* На мобильных чуть меньше */
     @media (max-width: 480px) {
       .heart-image {
         width: 120px;
@@ -136,7 +132,6 @@
       100% { transform: scale(1); }
     }
 
-    /* Текст-подсказка */
     .click-hint {
       font-family: 'Cormorant Garamond', serif;
       color: #ffdfec;
@@ -161,7 +156,7 @@
       100% { opacity: 0.8; text-shadow: 0 0 8px #ff8ab0; }
     }
 
-    /* Скрытое любовное послание */
+    /* Скрытое признание */
     .love-message-hidden {
       max-height: 0;
       opacity: 0;
@@ -202,50 +197,7 @@
       100% { transform: scale(1); opacity: 1; filter: blur(0); }
     }
 
-    /* Музыкальная панель */
-    .music-control {
-      margin-top: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .music-btn {
-      background: rgba(40, 10, 25, 0.55);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1.5px solid #ff9bc0;
-      color: #ffdae9;
-      padding: 12px 22px;
-      border-radius: 60px;
-      font-size: 1.1rem;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 500;
-      cursor: pointer;
-      box-shadow: 0 0 20px #ff477e55, 0 4px 10px rgba(0,0,0,0.2);
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      letter-spacing: 1px;
-      -webkit-tap-highlight-color: transparent;
-      width: fit-content;
-      margin: 0 auto;
-    }
-
-    .music-btn i {
-      font-size: 1.3rem;
-      color: #ffb3c6;
-    }
-
-    /* Убираем стандартное выделение */
-    button {
-      outline: none;
-      border: none;
-      background: none;
-    }
-
-    /* Мелкие доработки для мобильных */
+    /* Мелкие правки */
     @media (max-width: 380px) {
       .container {
         padding: 1.5rem 0.8rem;
@@ -258,15 +210,13 @@
 </head>
 <body>
 
-  <!-- Холст с анимацией лепестков -->
   <canvas id="petals-canvas"></canvas>
 
-  <!-- Главный блок -->
   <div class="container">
     <h1 class="top-message">✨ Варенька ✨</h1>
     <div class="sub-message">моя нежная вселенная</div>
 
-    <!-- Сердце — теперь картинка heart.png (положите файл рядом с HTML) -->
+    <!-- Сердце с картинкой heart.png (положите файл рядом) -->
     <div class="heart-wrapper" id="heartTrigger">
       <img src="heart.png" alt="Сердечко" class="heart-image" id="heartImg" draggable="false">
     </div>
@@ -277,41 +227,31 @@
       <i class="fas fa-heart" style="margin-left: 8px; color: #ffb3c6;"></i>
     </div>
 
-    <!-- Признание, появляется после клика -->
+    <!-- Любовное послание (появляется при клике) -->
     <div id="loveMessageContainer" class="love-message-hidden">
       <div class="love-text">
         Варя, я тебя очень сильно люблю! 💖
       </div>
     </div>
 
-    <!-- Управление музыкой (файл mus.mp3 должен быть в папке) -->
-    <div class="music-control">
-      <button class="music-btn" id="musicToggleBtn">
-        <i class="fas fa-music"></i> 
-        <span id="musicText">Включить мелодию</span>
-        <i class="fas fa-play" id="musicIcon"></i>
-      </button>
-    </div>
+    <!-- Музыка автоматически запустится при клике на сердце -->
+    <audio id="bgMusic" loop preload="auto">
+      <source src="mus.mp3" type="audio/mpeg">
+      Ваш браузер не поддерживает аудио.
+    </audio>
   </div>
-
-  <!-- Аудио элемент с романтической мелодией (замените на свой mus.mp3) -->
-  <audio id="bgMusic" loop preload="auto">
-    <source src="mus.mp3" type="audio/mpeg">
-    Ваш браузер не поддерживает аудио.
-  </audio>
 
   <script>
     (function(){
       "use strict";
 
-      // ---------- 1. ПАДАЮЩИЕ ЛЕПЕСТКИ (ОПТИМИЗИРОВАНО ДЛЯ МОБИЛЬНЫХ) ----------
+      // ---------- 1. ПАДАЮЩИЕ ЛЕПЕСТКИ ----------
       const canvas = document.getElementById('petals-canvas');
       const ctx = canvas.getContext('2d');
       let width, height;
       let petals = [];
-      const PETAL_COUNT = 45; // чуть меньше для производительности на мобильных
+      const PETAL_COUNT = 45;
 
-      // Палитра лепестков
       const colors = [
         'rgba(255, 180, 200, 0.9)',
         'rgba(255, 140, 170, 0.85)',
@@ -401,63 +341,30 @@
       initCanvas();
       animatePetals();
 
-      // ---------- 2. ИНТЕРАКТИВ: СЕРДЦЕ, МУЗЫКА, ПРИЗНАНИЕ ----------
+      // ---------- 2. ЛОГИКА СЕРДЦА И МУЗЫКИ ----------
       const heartTrigger = document.getElementById('heartTrigger');
       const loveContainer = document.getElementById('loveMessageContainer');
       const bgMusic = document.getElementById('bgMusic');
-      const musicBtn = document.getElementById('musicToggleBtn');
-      const musicText = document.getElementById('musicText');
-      const musicIcon = document.getElementById('musicIcon');
       const heartImg = document.getElementById('heartImg');
 
-      let isMusicPlaying = false;
+      let musicPlayed = false;
       let heartClicked = false;
 
-      // Установим громкость потише
-      bgMusic.volume = 0.4;
+      bgMusic.volume = 0.4; // комфортная громкость
 
-      function playMusic() {
-        bgMusic.play().then(() => {
-          isMusicPlaying = true;
-          updateMusicButton();
-        }).catch(e => {
-          console.warn('Автовоспроизведение заблокировано, нажмите кнопку музыки.');
-          isMusicPlaying = false;
-          updateMusicButton();
-        });
-      }
-
-      function pauseMusic() {
-        bgMusic.pause();
-        isMusicPlaying = false;
-        updateMusicButton();
-      }
-
-      function toggleMusic() {
-        if (isMusicPlaying) {
-          pauseMusic();
-        } else {
-          playMusic();
+      // Функция для запуска музыки (вызывается при клике)
+      function startMusic() {
+        if (!musicPlayed) {
+          bgMusic.play().then(() => {
+            musicPlayed = true;
+          }).catch(err => {
+            console.warn('Ошибка воспроизведения:', err);
+            // Попробуем ещё раз позже, если нужно
+          });
         }
       }
 
-      function updateMusicButton() {
-        if (isMusicPlaying) {
-          musicText.textContent = 'Пауза';
-          musicIcon.className = 'fas fa-pause';
-        } else {
-          musicText.textContent = 'Включить мелодию';
-          musicIcon.className = 'fas fa-play';
-        }
-      }
-
-      // Кнопка музыки
-      musicBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMusic();
-      });
-
-      // Функция «взрыва» лепестков при нажатии на сердце
+      // Взрыв лепестков
       function createPetalExplosion() {
         const centerX = width / 2;
         const centerY = height / 2 - 30;
@@ -480,7 +387,6 @@
           if (petals.length > 100) petals.splice(0, 10);
         }
         
-        // Добавим ещё лепестков сверху для эффекта
         for (let i=0; i<12; i++) {
           const p = new Petal();
           p.y = -30;
@@ -490,17 +396,20 @@
         }
       }
 
-      // Клик по сердечку (обёртке)
+      // Обработчик клика на сердце
       heartTrigger.addEventListener('click', function(e) {
         e.stopPropagation();
         
-        // Дополнительная анимация изображения (уже есть heartbeat, добавим вспышку)
+        // Анимация сердца
         heartImg.style.animation = 'none';
-        heartImg.offsetHeight; // рефлоу
+        heartImg.offsetHeight;
         heartImg.style.animation = 'heartbeat 0.6s 3';
         setTimeout(() => {
           heartImg.style.animation = 'heartbeat 1.8s infinite ease-in-out';
         }, 1800);
+        
+        // Запускаем музыку при первом клике
+        startMusic();
         
         if (!heartClicked) {
           heartClicked = true;
@@ -509,13 +418,8 @@
           loveContainer.classList.remove('love-message-hidden');
           loveContainer.classList.add('love-message-visible');
           
-          // Взрыв лепестков
+          // Эффект лепестков
           createPetalExplosion();
-          
-          // Включаем музыку, если не играет
-          if (!isMusicPlaying) {
-            playMusic();
-          }
           
           // Меняем подсказку
           document.querySelector('.click-hint').innerHTML = '<i class="fas fa-heart" style="margin-right: 10px; color: #ffb3c6;"></i> Ты — моё счастье <i class="fas fa-heart" style="margin-left: 10px;"></i>';
@@ -525,7 +429,7 @@
             document.querySelector('.top-message').innerHTML = '💞 Варя, люблю 💞';
           }, 500);
         } else {
-          // Повторное нажатие — ещё лепестков и подсветка сообщения
+          // Повторные клики добавляют лепестков и подсвечивают сообщение
           createPetalExplosion();
           loveContainer.classList.add('love-message-visible');
           const loveTextEl = document.querySelector('.love-text');
@@ -535,7 +439,6 @@
         }
       });
 
-      // Для мобильных: предотвращаем двойное касание зума (уже в мета)
       // Плавное появление контейнера
       window.addEventListener('load', () => {
         document.querySelector('.container').style.opacity = '0';
@@ -545,19 +448,18 @@
         }, 80);
       });
 
-      // Разблокировка аудио при первом касании (для iOS/Android)
-      document.addEventListener('touchstart', function unlockAudio() {
-        // ничего не делаем, просто даём возможность play()
-        document.removeEventListener('touchstart', unlockAudio);
+      // Для мобильных браузеров: разблокируем аудио при первом касании
+      document.addEventListener('touchstart', function() {
+        // пустой обработчик для активации AudioContext
       }, { once: true });
 
     })();
   </script>
   <!-- 
-    ВАЖНО: 
-    1. Положите файл heart.png в ту же папку, где находится этот HTML.
-    2. Положите файл mus.mp3 в ту же папку (или укажите полный путь к аудио).
-    3. Наслаждайтесь романтичным поздравлением для Вари! 
+    ПОДГОТОВЬТЕ ФАЙЛЫ:
+    - heart.png (изображение сердечка) положите в папку с HTML.
+    - mus.mp3 (музыкальный файл) положите туда же.
+    При клике на сердечко всё заработает автоматически!
   -->
 </body>
 </html>
