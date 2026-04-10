@@ -1,400 +1,630 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Варя, моя вечная любовь 💕</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>💖 Варя, я тебя люблю 💖</title>
+  <!-- Подключаем шрифты для красоты -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Pacifico&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(145deg, #1a0b1c 0%, #3e1a3c 40%, #7a2e5a 80%, #b34e6b 100%);
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+      position: relative;
+    }
 
-        body {
-            overflow: hidden;
-            height: 100vh;
-            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-            font-family: 'Playfair Display', serif;
-            color: #5d1a3d;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    /* Canvas для лепестков */
+    #petals-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
 
-        /* Canvas для лепестков */
-        #petals-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
+    /* Основной контейнер */
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 90%;
+      max-width: 700px;
+      padding: 2rem 1.5rem;
+      background: rgba(255, 240, 245, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 60px 20px 60px 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255, 200, 220, 0.2), 0 0 40px rgba(255, 80, 140, 0.4);
+      border: 1px solid rgba(255, 220, 240, 0.3);
+      text-align: center;
+      transition: all 0.5s ease;
+      animation: float-container 6s infinite alternate ease-in-out;
+    }
 
-        /* Центральный контейнер */
-        .container {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            max-width: 900px;
-            padding: 40px 20px;
-            background: rgba(255, 255, 255, 0.92);
-            border-radius: 30px;
-            box-shadow: 0 0 80px rgba(255, 105, 180, 0.6),
-                        0 0 160px rgba(255, 182, 193, 0.4);
-            backdrop-filter: blur(15px);
-            animation: gentleFloat 6s ease-in-out infinite;
-        }
+    @keyframes float-container {
+      0% { transform: translateY(0px); box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 2px rgba(255, 200, 220, 0.2), 0 0 40px rgba(255, 80, 140, 0.4); }
+      100% { transform: translateY(-12px); box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 0 3px rgba(255, 200, 220, 0.4), 0 0 60px rgba(255, 120, 180, 0.6); }
+    }
 
-        @keyframes gentleFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
+    /* Заголовок */
+    .top-message {
+      font-family: 'Pacifico', cursive;
+      color: #ffe4f2;
+      text-shadow: 0 0 15px #ff9bc0, 0 0 30px #ff4d6d, 0 4px 10px rgba(0,0,0,0.3);
+      font-size: clamp(1.8rem, 8vw, 3.2rem);
+      margin-bottom: 0.5rem;
+      letter-spacing: 2px;
+      word-break: break-word;
+    }
 
-        h1 {
-            font-family: 'Dancing Script', cursive;
-            font-size: 4.5rem;
-            color: #e91e63;
-            text-shadow: 0 0 20px rgba(233, 30, 99, 0.5);
-            margin-bottom: 10px;
-            line-height: 1.1;
-        }
+    .sub-message {
+      font-family: 'Cormorant Garamond', serif;
+      color: #fcd5e8;
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      font-weight: 400;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      margin-bottom: 2.5rem;
+      opacity: 0.9;
+      letter-spacing: 1px;
+    }
 
-        .subtitle {
-            font-size: 1.6rem;
-            font-weight: 400;
-            color: #c2185b;
-            margin-bottom: 40px;
-            letter-spacing: 2px;
-        }
+    /* Сердце - центральный элемент */
+    .heart-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 2rem 0 1.5rem;
+      cursor: pointer;
+      filter: drop-shadow(0 0 25px #ff2a5e) drop-shadow(0 0 8px #ffb0c7);
+      transition: transform 0.2s;
+    }
 
-        /* Сердечко */
-        #heart {
-            width: 220px;
-            height: 220px;
-            font-size: 180px;
-            line-height: 220px;
-            margin: 0 auto 20px;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            filter: drop-shadow(0 0 30px #ff4081);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-        }
+    .heart-wrapper:hover {
+      transform: scale(1.05);
+    }
 
-        #heart:hover {
-            transform: scale(1.15) rotate(15deg);
-        }
+    .heart-wrapper:active {
+      transform: scale(0.98);
+    }
 
-        #heart.clicked {
-            animation: heartBeat 0.8s ease-in-out 3;
-        }
+    /* Рисуем красивое сердце с помощью CSS */
+    .heart {
+      position: relative;
+      width: 140px;
+      height: 120px;
+      animation: heartbeat 1.8s infinite ease-in-out;
+      transform-origin: center;
+    }
 
-        @keyframes heartBeat {
-            0% { transform: scale(1); }
-            30% { transform: scale(1.4); }
-            50% { transform: scale(0.9); }
-            70% { transform: scale(1.3); }
-            90% { transform: scale(0.95); }
-            100% { transform: scale(1); }
-        }
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 70px;
+      height: 112px;
+      background: radial-gradient(circle at 30% 25%, #ff85a8, #ff2a5e 70%, #b00034);
+      border-radius: 70px 70px 0 0;
+      box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 0 30px #ff8ab0;
+      transition: all 0.3s;
+    }
 
-        .instruction {
-            font-family: 'Dancing Script', cursive;
-            font-size: 2.2rem;
-            color: #c2185b;
-            margin-bottom: 30px;
-            text-shadow: 0 4px 15px rgba(194, 24, 91, 0.3);
-        }
+    .heart::before {
+      left: 70px;
+      transform: rotate(-45deg);
+      transform-origin: 0 100%;
+    }
 
-        /* Сообщение после клика */
-        #message {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            margin-top: 40px;
-        }
+    .heart::after {
+      left: 0;
+      transform: rotate(45deg);
+      transform-origin: 100% 100%;
+    }
 
-        #message.show {
-            opacity: 1;
-            transform: scale(1);
-        }
+    /* Добавляем среднюю часть для плавности */
+    .heart .heart-fill {
+      position: absolute;
+      width: 70px;
+      height: 112px;
+      background: linear-gradient(145deg, #ff2a5e, #b00034);
+      left: 35px;
+      top: 0;
+      border-radius: 0 0 30px 30px;
+      box-shadow: inset 0 8px 12px rgba(255,255,255,0.3), 0 0 30px #ff3b6f;
+      z-index: 1;
+    }
 
-        #message h2 {
-            font-family: 'Dancing Script', cursive;
-            font-size: 3.8rem;
-            color: #e91e63;
-            margin-bottom: 20px;
-            line-height: 1.1;
-        }
+    /* Анимация биения */
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.15); }
+      35% { transform: scale(1.08); }
+      45% { transform: scale(1.2); }
+      55% { transform: scale(1.1); }
+      65% { transform: scale(1.17); }
+      75% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
 
-        #message p {
-            font-size: 1.6rem;
-            line-height: 1.6;
-            max-width: 700px;
-            margin: 0 auto 20px;
-            color: #6d1b47;
-        }
+    /* Текст под сердцем */
+    .click-hint {
+      font-family: 'Cormorant Garamond', serif;
+      color: #ffdfec;
+      font-size: 1.6rem;
+      font-weight: 600;
+      text-shadow: 0 0 12px #ff6b9d, 0 2px 10px black;
+      margin: 20px 0 10px;
+      letter-spacing: 2px;
+      background: rgba(30, 5, 20, 0.3);
+      display: inline-block;
+      padding: 8px 28px;
+      border-radius: 50px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 200, 220, 0.5);
+      animation: pulse-text 2.5s infinite;
+    }
 
-        /* Конфетти-сердечки при клике */
-        .flying-heart {
-            position: absolute;
-            font-size: 30px;
-            z-index: 20;
-            pointer-events: none;
-            animation: flyHeart 3s ease-out forwards;
-        }
+    @keyframes pulse-text {
+      0% { opacity: 0.8; text-shadow: 0 0 8px #ff8ab0; }
+      50% { opacity: 1; text-shadow: 0 0 20px #ff3b6f, 0 0 30px #ffb0c7; }
+      100% { opacity: 0.8; text-shadow: 0 0 8px #ff8ab0; }
+    }
 
-        @keyframes flyHeart {
-            0% {
-                opacity: 1;
-                transform: scale(1) rotate(0deg);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(0.5) rotate(720deg) translateY(-800px);
-            }
-        }
+    /* Блок с признанием (изначально скрыт) */
+    .love-message-hidden {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease, margin 0.5s;
+      margin-top: 0;
+      pointer-events: none;
+    }
 
-        /* Нижняя надпись */
-        .footer {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.1rem;
-            color: rgba(93, 26, 61, 0.7);
-            z-index: 10;
-            font-family: 'Dancing Script', cursive;
-            text-shadow: 0 2px 10px rgba(255, 255, 255, 0.8);
-        }
+    .love-message-visible {
+      max-height: 300px;
+      opacity: 1;
+      margin-top: 30px;
+      pointer-events: auto;
+    }
 
-        /* Адаптив */
-        @media (max-width: 768px) {
-            h1 { font-size: 3.2rem; }
-            #heart { width: 160px; height: 160px; font-size: 130px; }
-            .instruction { font-size: 1.8rem; }
-        }
-    </style>
+    .love-text {
+      font-family: 'Pacifico', cursive;
+      font-size: clamp(2.2rem, 9vw, 4rem);
+      color: #fff5fb;
+      text-shadow: 0 0 25px #ff2a5e, 0 0 50px #ff80a5, 0 5px 15px #1a0b1c;
+      background: linear-gradient(135deg, #ffe6f0, #ffd0e0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.4;
+      padding: 15px 20px;
+      border-radius: 60px 20px 60px 20px;
+      background-color: rgba(10, 0, 5, 0.25);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 0 30px rgba(255,200,220,0.3);
+      transform: scale(1);
+      animation: appear-message 1s ease-out;
+    }
+
+    @keyframes appear-message {
+      0% { transform: scale(0.7); opacity: 0; filter: blur(4px); }
+      100% { transform: scale(1); opacity: 1; filter: blur(0); }
+    }
+
+    /* Музыкальный контрол */
+    .music-control {
+      margin-top: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .music-btn {
+      background: rgba(40, 10, 25, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid #ff9bc0;
+      color: #ffdae9;
+      padding: 12px 25px;
+      border-radius: 60px;
+      font-size: 1.2rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
+      cursor: pointer;
+      box-shadow: 0 0 20px #ff477e55, 0 4px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 1px;
+    }
+
+    .music-btn:hover {
+      background: rgba(90, 20, 50, 0.7);
+      box-shadow: 0 0 30px #ff6b9d, 0 6px 12px black;
+      transform: scale(1.03);
+      border-color: #ffc1d9;
+    }
+
+    .music-btn i {
+      font-size: 1.4rem;
+      color: #ffb3c6;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 500px) {
+      .container {
+        padding: 1.5rem 1rem;
+      }
+      .heart {
+        width: 110px;
+        height: 95px;
+      }
+      .heart::before,
+      .heart::after {
+        width: 55px;
+        height: 88px;
+      }
+      .heart::before { left: 55px; }
+      .heart .heart-fill {
+        width: 55px;
+        height: 88px;
+        left: 27.5px;
+      }
+    }
+
+    /* Украшательства */
+    .glow-spark {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Canvas для падающих лепестков -->
-    <canvas id="petals-canvas"></canvas>
+  <!-- Холст для анимации падающих лепестков -->
+  <canvas id="petals-canvas"></canvas>
 
-    <div class="container">
-        <h1>Варя, моя самая большая любовь...</h1>
-        <p class="subtitle">С 10 апреля 2026 ❤️</p>
-        
-        <!-- Сердечко -->
-        <div id="heart" onclick="startLove()">❤️</div>
-        
-        <p class="instruction" id="instruction-text">
-            Нажми на сердечко и почувствуй, как сильно я тебя люблю 💕
-        </p>
+  <!-- Главный контейнер -->
+  <div class="container">
+    <h1 class="top-message">✨ Варенька ✨</h1>
+    <div class="sub-message">моя нежная вселенная</div>
 
-        <!-- Сообщение, которое появляется после клика -->
-        <div id="message">
-            <h2>Варя, я тебя очень сильно люблю!</h2>
-            <p>Ты — самое прекрасное чудо в моей жизни. Каждый твой взгляд, улыбка, голос заставляют моё сердце биться быстрее. С тобой я чувствую себя самым счастливым человеком на свете. Спасибо, что ты есть. Я люблю тебя бесконечно, моя нежная, моя невероятная, моя единственная Варя 💖</p>
-            <p>Твой навсегда ❤️</p>
-        </div>
+    <!-- Сердце (кликабельное) -->
+    <div class="heart-wrapper" id="heartTrigger">
+      <div class="heart">
+        <div class="heart-fill"></div>
+      </div>
     </div>
 
-    <!-- Музыка (романтическая, из открытых источников) -->
-    <audio id="loveMusic" loop>
-        <!-- 
-            Бесплатный романтический трек: "Romantic Love" by Alex-Productions
-            Скачай MP3 здесь: https://www.free-stock-music.com/alex-productions-romantic-love.html
-            (лицензия CC BY 3.0 — просто укажи автора при использовании)
-            
-            После скачивания переименуй файл в "romantic-love.mp3" и положи в ту же папку с index.html
-            или вставь прямую ссылку на хостинг (например, GitHub raw или свой сервер)
-        -->
-        <source src="romantic-love.mp3" type="audio/mpeg">
-        Ваш браузер не поддерживает аудио.
+    <div class="click-hint">
+      <i class="fas fa-hand-pointer" style="margin-right: 10px;"></i> 
+      нажми на сердечко 
+      <i class="fas fa-heart" style="margin-left: 10px; color: #ffb3c6;"></i>
+    </div>
+
+    <!-- Скрытое признание -->
+    <div id="loveMessageContainer" class="love-message-hidden">
+      <div class="love-text">
+        Варя, я тебя очень сильно люблю! 💖
+      </div>
+    </div>
+
+    <!-- Управление музыкой -->
+    <div class="music-control">
+      <button class="music-btn" id="musicToggleBtn">
+        <i class="fas fa-music"></i> 
+        <span id="musicText">Включить мелодию</span>
+        <i class="fas fa-play" id="musicIcon"></i>
+      </button>
+    </div>
+
+    <!-- Скрытый аудиоэлемент с романтической музыкой (royalty free из открытых источников) -->
+    <!-- Используется трек "Romantic Piano" с Pixabay (бесплатно для использования) -->
+    <audio id="bgMusic" loop preload="auto">
+      <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_2c90b0c2e1.mp3" type="audio/mpeg">
+      Ваш браузер не поддерживает аудио.
     </audio>
+  </div>
 
-    <div class="footer">
-        Сделано с безумной любовью специально для тебя, Варя ✨
-    </div>
+  <script>
+    (function(){
+      "use strict";
 
-    <script>
-        // === ПАДАЮЩИЕ ЛЕПЕСТКИ НА CANVAS (мега-красиво и плавно) ===
-        const canvas = document.getElementById('petals-canvas');
-        const ctx = canvas.getContext('2d');
+      // ---------- 1. CANVAS: ПАДАЮЩИЕ ЛЕПЕСТКИ (МЕГА КРАСИВО) ----------
+      const canvas = document.getElementById('petals-canvas');
+      const ctx = canvas.getContext('2d');
+      let width, height;
+      let petals = [];
+      const PETAL_COUNT = 55; // количество лепестков
+
+      // Цвета лепестков: от нежно-розового до ярко-малинового
+      const colors = [
+        'rgba(255, 180, 200, 0.9)',  // светлый
+        'rgba(255, 140, 170, 0.85)',
+        'rgba(255, 100, 140, 0.8)',
+        'rgba(255, 70, 120, 0.75)',
+        'rgba(255, 200, 210, 0.9)',
+        'rgba(255, 160, 190, 0.85)',
+        'rgba(220, 80, 130, 0.8)',
+        'rgba(255, 120, 150, 0.9)'
+      ];
+
+      // Конструктор лепестка
+      class Petal {
+        constructor() {
+          this.reset();
+          // случайное начальное положение по Y, чтобы они не стартовали все сразу сверху
+          this.y = Math.random() * height;
+        }
+        reset() {
+          this.x = Math.random() * width;
+          this.y = -20 - Math.random() * height * 0.5; // начинают выше экрана
+          this.size = 8 + Math.random() * 18; // размер
+          this.speedY = 1.2 + Math.random() * 3.5;
+          this.speedX = -0.8 + Math.random() * 1.6;
+          this.rotation = Math.random() * Math.PI * 2;
+          this.rotationSpeed = -0.02 + Math.random() * 0.04;
+          this.color = colors[Math.floor(Math.random() * colors.length)];
+          this.opacity = 0.7 + Math.random() * 0.3;
+        }
+        update() {
+          this.y += this.speedY;
+          this.x += this.speedX + Math.sin(this.y * 0.005) * 0.5; // легкое покачивание
+          this.rotation += this.rotationSpeed;
+
+          // Сброс, если улетел за пределы
+          if (this.y > height + 40 || this.x < -40 || this.x > width + 40) {
+            this.reset();
+            this.y = -30;
+            this.x = Math.random() * width;
+          }
+        }
+        draw() {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          ctx.rotate(this.rotation);
+          ctx.globalAlpha = this.opacity;
+          
+          // Рисуем лепесток в форме капли (эллипс с заострением)
+          ctx.beginPath();
+          ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.9, 0, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.shadowColor = '#ff9bc0';
+          ctx.shadowBlur = 12;
+          ctx.fill();
+          
+          // Добавим блик для объема
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.ellipse(-2, -3, this.size*0.2, this.size*0.3, 0, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+          ctx.fill();
+          
+          ctx.restore();
+        }
+      }
+
+      function initCanvas() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
         
-        let petals = [];
-        const petalCount = 120; // количество лепестков
-        const petalImages = ['🌸', '🌺', '💖', '🌹', '🩷']; // романтические символы
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        // Создаем лепестки
+        petals = [];
+        for (let i = 0; i < PETAL_COUNT; i++) {
+          petals.push(new Petal());
         }
+      }
 
-        class Petal {
-            constructor() {
-                this.reset();
-            }
-            
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height - canvas.height;
-                this.size = Math.random() * 28 + 18;
-                this.speed = Math.random() * 2.5 + 1.2;
-                this.angle = Math.random() * 360;
-                this.angleSpeed = (Math.random() - 0.5) * 4;
-                this.opacity = Math.random() * 0.7 + 0.4;
-                this.swing = Math.random() * 80 + 40; // амплитуда качания
-                this.image = petalImages[Math.floor(Math.random() * petalImages.length)];
-            }
-            
-            update() {
-                this.y += this.speed;
-                this.angle += this.angleSpeed;
-                this.x += Math.sin(this.angle / 30) * 2.5; // лёгкое покачивание
-                
-                // Если лепесток улетел вниз — возрождаем сверху
-                if (this.y > canvas.height + 50) {
-                    this.reset();
-                }
-            }
-            
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.translate(this.x, this.y);
-                ctx.rotate(this.angle * Math.PI / 180);
-                ctx.font = `${this.size}px Arial`;
-                ctx.fillText(this.image, 0, 0);
-                ctx.restore();
-            }
+      function animatePetals() {
+        ctx.clearRect(0, 0, width, height);
+        
+        for (let p of petals) {
+          p.update();
+          p.draw();
         }
+        
+        requestAnimationFrame(animatePetals);
+      }
 
-        function initPetals() {
-            petals = [];
-            for (let i = 0; i < petalCount; i++) {
-                petals.push(new Petal());
-            }
+      // Обработчик ресайза
+      window.addEventListener('resize', () => {
+        initCanvas();
+      });
+
+      // Запуск анимации
+      initCanvas();
+      animatePetals();
+
+      // ---------- 2. ЛОГИКА СЕРДЕЧКА И ПРИЗНАНИЯ ----------
+      const heartTrigger = document.getElementById('heartTrigger');
+      const loveContainer = document.getElementById('loveMessageContainer');
+      const bgMusic = document.getElementById('bgMusic');
+      const musicBtn = document.getElementById('musicToggleBtn');
+      const musicText = document.getElementById('musicText');
+      const musicIcon = document.getElementById('musicIcon');
+
+      let isMusicPlaying = false;
+      let heartClicked = false;
+
+      // Функция для запуска музыки (с учетом политики автовоспроизведения)
+      function playMusic() {
+        bgMusic.play().then(() => {
+          isMusicPlaying = true;
+          updateMusicButton();
+        }).catch(e => {
+          console.warn('Автовоспроизведение заблокировано, нажмите кнопку музыки.');
+          isMusicPlaying = false;
+          updateMusicButton();
+        });
+      }
+
+      function pauseMusic() {
+        bgMusic.pause();
+        isMusicPlaying = false;
+        updateMusicButton();
+      }
+
+      function toggleMusic() {
+        if (isMusicPlaying) {
+          pauseMusic();
+        } else {
+          playMusic();
         }
+      }
 
-        function animatePetals() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            for (let i = 0; i < petals.length; i++) {
-                petals[i].update();
-                petals[i].draw();
-            }
-            
-            requestAnimationFrame(animatePetals);
+      function updateMusicButton() {
+        if (isMusicPlaying) {
+          musicText.textContent = 'Пауза';
+          musicIcon.className = 'fas fa-pause';
+        } else {
+          musicText.textContent = 'Включить мелодию';
+          musicIcon.className = 'fas fa-play';
         }
+      }
 
-        // === ВЗРЫВ ЛЕПЕСТКОВ И СЕРДЕЧЕК ПРИ КЛИКЕ ===
-        function createBurst(x, y, count) {
-            for (let i = 0; i < count; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'flying-heart';
-                heart.textContent = Math.random() > 0.5 ? '💖' : '🌸';
-                heart.style.left = `${x + (Math.random() * 120 - 60)}px`;
-                heart.style.top = `${y + (Math.random() * 80 - 40)}px`;
-                
-                // Случайное направление полёта
-                const angle = Math.random() * Math.PI * 2;
-                const velocity = 80 + Math.random() * 120;
-                heart.style.setProperty('--tx', `${Math.cos(angle) * velocity}px`);
-                heart.style.setProperty('--ty', `${Math.sin(angle) * velocity - 400}px`);
-                
-                document.body.appendChild(heart);
-                
-                // Удаляем после анимации
-                setTimeout(() => {
-                    heart.remove();
-                }, 3200);
-            }
+      // Клик по кнопке музыки
+      musicBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMusic();
+      });
+
+      // При первом взаимодействии (если разрешено) можно попробовать включить, но не навязываем
+      // А при клике на сердце включаем музыку (если не играет) - хороший UX
+      
+      // Эффект при клике на сердце: анимация и показ сообщения
+      heartTrigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        if (!heartClicked) {
+          heartClicked = true;
+          
+          // Добавляем класс для отображения признания
+          loveContainer.classList.remove('love-message-hidden');
+          loveContainer.classList.add('love-message-visible');
+          
+          // Дополнительная анимация: взрыв лепестков (добавим временно много лепестков)
+          createPetalExplosion();
+          
+          // Включаем музыку, если еще не играет
+          if (!isMusicPlaying) {
+            playMusic();
+          }
+          
+          // Меняем hint
+          document.querySelector('.click-hint').innerHTML = '<i class="fas fa-heart" style="margin-right: 10px; color: #ffb3c6;"></i> Ты — моё счастье <i class="fas fa-heart" style="margin-left: 10px;"></i>';
+          
+          // Анимируем сердце дополнительно (добавим класс на время)
+          const heartEl = document.querySelector('.heart');
+          heartEl.style.animation = 'heartbeat 0.8s 3';
+          setTimeout(() => {
+            heartEl.style.animation = 'heartbeat 1.8s infinite ease-in-out';
+          }, 2400);
+          
+          // Можно изменить текст верхний чуть позже
+          setTimeout(() => {
+            document.querySelector('.top-message').innerHTML = '💞 Варя, люблю 💞';
+          }, 600);
+        } else {
+          // Если уже кликали, просто подсветим признание
+          loveContainer.classList.add('love-message-visible');
+          const loveTextEl = document.querySelector('.love-text');
+          loveTextEl.style.animation = 'none';
+          loveTextEl.offsetHeight; // рефлоу
+          loveTextEl.style.animation = 'appear-message 0.8s ease-out';
         }
+      });
 
-        // === ЗАПУСК ВСЕГО ПРИ КЛИКЕ НА СЕРДЕЧКО ===
-        let isStarted = false;
+      // Функция взрыва лепестков (создает временные лепестки для эффекта)
+      function createPetalExplosion() {
+        const explosionCount = 30;
+        const centerX = width / 2;
+        const centerY = height / 2 - 30;
+        
+        for (let i = 0; i < explosionCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 3 + Math.random() * 9;
+          const petal = new Petal();
+          petal.x = centerX + (Math.random() - 0.5) * 100;
+          petal.y = centerY + (Math.random() - 0.5) * 80;
+          petal.speedX = Math.cos(angle) * speed;
+          petal.speedY = Math.sin(angle) * speed - 2; // чуть вверх, потом вниз
+          petal.size = 10 + Math.random() * 18;
+          petal.rotationSpeed = -0.05 + Math.random() * 0.1;
+          petal.color = colors[Math.floor(Math.random() * colors.length)];
+          petal.opacity = 0.9;
+          
+          // Добавляем в массив на время (или создаем отдельный)
+          // Чтобы не усложнять, добавим в основной массив, потом они сами улетят
+          petals.push(petal);
+          
+          // Ограничим кол-во лепестков, чтобы не перегружать
+          if (petals.length > 120) {
+            petals.splice(0, 15);
+          }
+        }
+        
+        // Также добавим несколько дополнительных лепестков сверху
+        for (let i=0; i<10; i++) {
+          const p = new Petal();
+          p.y = -20;
+          p.x = Math.random() * width;
+          p.speedY = 4 + Math.random() * 6;
+          petals.push(p);
+        }
+      }
 
-        window.startLove = function() {
-            if (isStarted) return;
-            isStarted = true;
+      // Небольшая инициализация: пробуем предзагрузить музыку (но не автовоспроизводим)
+      window.addEventListener('load', () => {
+        // Подготовим аудио
+        bgMusic.volume = 0.45; // комфортная громкость
+        
+        // Красивое появление контейнера
+        document.querySelector('.container').style.opacity = '0';
+        setTimeout(() => {
+          document.querySelector('.container').style.transition = 'opacity 1.5s';
+          document.querySelector('.container').style.opacity = '1';
+        }, 100);
+      });
 
-            const heart = document.getElementById('heart');
-            const message = document.getElementById('message');
-            const instruction = document.getElementById('instruction-text');
-            const audio = document.getElementById('loveMusic');
+      // Дополнительно: клик в любом месте для запуска музыки (если блокировка) - не обязательно
+      
+      // Чтобы лепестки реагировали на движение мыши? Можно, но оставим просто.
 
-            // Анимация сердечка
-            heart.classList.add('clicked');
-            
-            // Запуск музыки (только после взаимодействия пользователя)
-            audio.volume = 0.75;
-            audio.play().catch(() => {
-                console.log('Музыка запущена после клика');
-            });
+      // Если браузер блокирует автовоспроизведение, показываем подсказку
+      document.addEventListener('click', function firstInteraction() {
+        // Ничего не делаем, просто даем возможность аудиоконтексту разблокироваться
+        document.removeEventListener('click', firstInteraction);
+      }, { once: true });
 
-            // Прячем инструкцию
-            instruction.style.transition = 'opacity 1s';
-            instruction.style.opacity = '0';
-            
-            setTimeout(() => {
-                instruction.style.display = 'none';
-            }, 1000);
-
-            // Показываем любовное сообщение
-            setTimeout(() => {
-                message.classList.add('show');
-            }, 800);
-
-            // Мега-взрыв лепестков и сердечек из центра
-            const rect = heart.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            createBurst(centerX, centerY, 80); // 80 летающих элементов
-
-            // Дополнительный импульс лепесткам на canvas (ускоряем на 3 секунды)
-            const originalSpeed = 1;
-            petals.forEach(p => {
-                p.speed += 3;
-            });
-            
-            setTimeout(() => {
-                petals.forEach(p => {
-                    p.speed = Math.max(1.2, p.speed - 3);
-                });
-            }, 3000);
-
-            // Ещё один лёгкий взрыв через секунду
-            setTimeout(() => {
-                createBurst(centerX + 80, centerY - 50, 40);
-            }, 1200);
-
-            console.log('%c❤️ Варя, я тебя очень сильно люблю! Сайт запущен с любовью ❤️', 'color: #e91e63; font-size: 18px; font-family: Dancing Script');
-        };
-
-        // === ИНИЦИАЛИЗАЦИЯ ===
-        window.onload = function() {
-            resizeCanvas();
-            initPetals();
-            animatePetals();
-            
-            // Адаптация под изменение размера окна
-            window.addEventListener('resize', () => {
-                resizeCanvas();
-            });
-            
-            console.log('%c💕 Мега-красивый любовный сайт для Вари готов! Наслаждайтесь вместе 💕', 'color: #ff4081; font-size: 16px;');
-        };
-    </script>
+      // При изменении размера пересоздаем лепестки, сохраняя общее настроение
+      // (initCanvas уже пересоздает массив, но мы хотим сохранить взрывные? не критично)
+      
+    })();
+  </script>
 </body>
 </html>
