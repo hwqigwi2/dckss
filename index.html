@@ -1,250 +1,148 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Для Вари ❤️</title>
 
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@300;500&display=swap" rel="stylesheet">
-
 <style>
-/* ===== RESET ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        height: 100vh;
+    }
 
-body {
-  height: 100vh;
-  overflow: hidden;
-  font-family: 'Playfair Display', serif;
-  background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
-  background-size: 400% 400%;
-  animation: gradientMove 15s ease infinite;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-}
+    /* Центр */
+    .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: white;
+    }
 
-/* ===== BACKGROUND ANIMATION ===== */
-@keyframes gradientMove {
-  0% {background-position: 0% 50%;}
-  50% {background-position: 100% 50%;}
-  100% {background-position: 0% 50%;}
-}
+    h1 {
+        font-size: 40px;
+        margin-bottom: 20px;
+    }
 
-/* ===== PETALS ===== */
-.petal {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: rgba(255, 182, 193, 0.8);
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(45deg);
-  animation: fall linear infinite;
-}
+    /* Сердце */
+    .heart {
+        width: 100px;
+        height: 90px;
+        background: red;
+        position: relative;
+        transform: rotate(-45deg);
+        margin: 0 auto;
+        cursor: pointer;
+        animation: pulse 1.5s infinite;
+    }
 
-@keyframes fall {
-  0% {
-    transform: translateY(-10vh) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(110vh) rotate(360deg);
-    opacity: 0;
-  }
-}
+    .heart:before,
+    .heart:after {
+        content: "";
+        width: 100px;
+        height: 90px;
+        background: red;
+        border-radius: 50%;
+        position: absolute;
+    }
 
-/* ===== MAIN CONTAINER ===== */
-.container {
-  text-align: center;
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.1);
-  padding: 40px;
-  border-radius: 25px;
-  box-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
-  max-width: 90%;
-}
+    .heart:before {
+        top: -50px;
+        left: 0;
+    }
 
-/* ===== HEART ===== */
-.heart {
-  width: 120px;
-  height: 120px;
-  position: relative;
-  margin: 0 auto 20px;
-  transform: rotate(-45deg);
-  cursor: pointer;
-  animation: pulse 2s infinite;
-}
+    .heart:after {
+        left: 50px;
+        top: 0;
+    }
 
-.heart::before,
-.heart::after {
-  content: "";
-  width: 120px;
-  height: 120px;
-  background: #ff4d6d;
-  border-radius: 50%;
-  position: absolute;
-}
+    @keyframes pulse {
+        0% { transform: scale(1) rotate(-45deg); }
+        50% { transform: scale(1.2) rotate(-45deg); }
+        100% { transform: scale(1) rotate(-45deg); }
+    }
 
-.heart::before {
-  top: -60px;
-  left: 0;
-}
+    /* Текст */
+    .love-text {
+        opacity: 0;
+        margin-top: 30px;
+        font-size: 28px;
+        transition: 1s;
+    }
 
-.heart::after {
-  left: 60px;
-  top: 0;
-}
+    .show {
+        opacity: 1;
+    }
 
-/* glow */
-.heart {
-  background: #ff4d6d;
-  box-shadow: 0 0 20px #ff4d6d, 0 0 40px #ff4d6d;
-}
+    /* Лепестки */
+    .petal {
+        position: absolute;
+        top: -10px;
+        width: 15px;
+        height: 15px;
+        background: pink;
+        border-radius: 50%;
+        opacity: 0.7;
+        animation: fall linear infinite;
+    }
 
-/* pulse */
-@keyframes pulse {
-  0% {transform: scale(1) rotate(-45deg);}
-  50% {transform: scale(1.1) rotate(-45deg);}
-  100% {transform: scale(1) rotate(-45deg);}
-}
-
-/* ===== TEXT ===== */
-.tap-text {
-  font-size: 18px;
-  opacity: 0.9;
-  animation: fadePulse 2s infinite;
-}
-
-@keyframes fadePulse {
-  0% {opacity: 0.5;}
-  50% {opacity: 1;}
-  100% {opacity: 0.5;}
-}
-
-/* ===== LOVE TEXT ===== */
-.love-text {
-  margin-top: 20px;
-  font-family: 'Great Vibes', cursive;
-  font-size: 32px;
-  opacity: 0;
-  transition: opacity 1.5s ease;
-}
-
-.love-text.show {
-  opacity: 1;
-}
-
-/* ===== SUB TEXT ===== */
-.sub-text {
-  font-size: 18px;
-  margin-top: 10px;
-  opacity: 0;
-  transition: opacity 2s ease;
-}
-
-.sub-text.show {
-  opacity: 1;
-}
-
-/* ===== MUSIC BUTTON ===== */
-.music-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  transition: 0.3s;
-}
-
-.music-btn:hover {
-  background: rgba(255,255,255,0.4);
-}
-
-/* ===== MOBILE ===== */
-@media (max-width: 600px) {
-  .heart {
-    width: 90px;
-    height: 90px;
-  }
-}
+    @keyframes fall {
+        to {
+            transform: translateY(110vh) rotate(360deg);
+        }
+    }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <div class="heart" id="heart"></div>
-  <div class="tap-text">Нажми на сердечко ❤️</div>
+<div class="center">
+    <h1>Нажми на сердечко ❤️</h1>
 
-  <div class="love-text" id="love1">Варя, я тебя очень сильно люблю ❤️</div>
-  <div class="sub-text" id="love2">Ты — самое прекрасное, что есть в моей жизни</div>
-  <div class="sub-text" id="love3">Спасибо, что ты есть у меня</div>
+    <div class="heart" onclick="showLove()"></div>
 
-  <button class="music-btn" id="musicBtn">🎵 Включить музыку</button>
+    <div class="love-text" id="text">
+        Варя, я тебя очень сильно люблю 💖<br>
+        Ты — самое лучшее, что есть в моей жизни ✨<br>
+        Спасибо, что ты у меня есть 💕
+    </div>
 </div>
 
-<!-- MUSIC -->
-<audio id="music" loop>
-  <source src="https://cdn.pixabay.com/audio/2023/03/14/audio_6c4c9c6c02.mp3" type="audio/mpeg">
-</audio>
+<audio id="music" src="love.mp3"></audio>
 
 <script>
-/* ===== PETALS GENERATION ===== */
-for (let i = 0; i < 30; i++) {
-  const petal = document.createElement("div");
-  petal.classList.add("petal");
+function showLove() {
+    document.getElementById("text").classList.add("show");
+    document.getElementById("music").play();
 
-  petal.style.left = Math.random() * 100 + "vw";
-  petal.style.animationDuration = (5 + Math.random() * 5) + "s";
-  petal.style.opacity = Math.random();
-
-  document.body.appendChild(petal);
+    // эффект вспышки
+    document.body.style.background = "linear-gradient(135deg, #ff758c, #ff7eb3)";
 }
 
-/* ===== HEART CLICK ===== */
-const heart = document.getElementById("heart");
+// лепестки
+function createPetal() {
+    const petal = document.createElement("div");
+    petal.classList.add("petal");
 
-heart.addEventListener("click", () => {
-  heart.style.animation = "none";
-  heart.style.transform = "scale(1.5) rotate(-45deg)";
-  heart.style.boxShadow = "0 0 60px #ff4d6d";
+    petal.style.left = Math.random() * window.innerWidth + "px";
+    petal.style.animationDuration = (3 + Math.random() * 5) + "s";
 
-  // Show text step-by-step
-  setTimeout(() => {
-    document.getElementById("love1").classList.add("show");
-  }, 500);
+    document.body.appendChild(petal);
 
-  setTimeout(() => {
-    document.getElementById("love2").classList.add("show");
-  }, 2000);
+    setTimeout(() => {
+        petal.remove();
+    }, 8000);
+}
 
-  setTimeout(() => {
-    document.getElementById("love3").classList.add("show");
-  }, 3500);
-});
-
-/* ===== MUSIC CONTROL ===== */
-const music = document.getElementById("music");
-const btn = document.getElementById("musicBtn");
-
-btn.addEventListener("click", () => {
-  if (music.paused) {
-    music.play();
-    btn.textContent = "🔇 Выключить музыку";
-  } else {
-    music.pause();
-    btn.textContent = "🎵 Включить музыку";
-  }
-});
+setInterval(createPetal, 300);
 </script>
 
 </body>
 </html>
+```
