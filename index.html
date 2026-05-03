@@ -1,465 +1,806 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>💖 Варя, я тебя люблю 💖</title>
-  <!-- Шрифты -->
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Pacifico&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ducks Drop</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    body {
-      min-height: 100vh;
-      background: linear-gradient(145deg, #1a0b1c 0%, #3e1a3c 40%, #7a2e5a 80%, #b34e6b 100%);
-      background-attachment: fixed;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Montserrat', sans-serif;
-      overflow-x: hidden;
-      position: relative;
-      padding: 12px;
-    }
+        body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px 4px;
+            position: relative;
+            touch-action: pan-y pinch-zoom;
+            transition: background 0.5s ease;
+        }
 
-    /* Canvas лепестков */
-    #petals-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-    }
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
 
-    /* Главный контейнер */
-    .container {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 500px;
-      padding: 1.8rem 1.2rem;
-      background: rgba(255, 240, 245, 0.08);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-radius: 50px 20px 50px 20px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.5), 0 0 0 2px rgba(255, 200, 220, 0.2), 0 0 30px rgba(255, 80, 140, 0.4);
-      border: 1px solid rgba(255, 220, 240, 0.3);
-      text-align: center;
-      transition: all 0.4s ease;
-      animation: float-container 6s infinite alternate ease-in-out;
-      margin: 0 auto;
-    }
+        .content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+        }
 
-    @keyframes float-container {
-      0% { transform: translateY(0px); box-shadow: 0 15px 40px rgba(0,0,0,0.5), 0 0 0 2px rgba(255, 200, 220, 0.2), 0 0 30px rgba(255, 80, 140, 0.4); }
-      100% { transform: translateY(-8px); box-shadow: 0 25px 55px rgba(0,0,0,0.6), 0 0 0 3px rgba(255, 200, 220, 0.4), 0 0 45px rgba(255, 120, 180, 0.6); }
-    }
+        #finalContainer .buttons {
+            transform: translateY(-50px);
+        }
+        
+        #slidesContainer, #storyScreen, #finalTaskScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
 
-    .top-message {
-      font-family: 'Pacifico', cursive;
-      color: #ffe4f2;
-      text-shadow: 0 0 15px #ff9bc0, 0 0 30px #ff4d6d, 0 4px 10px rgba(0,0,0,0.3);
-      font-size: clamp(2rem, 10vw, 3.5rem);
-      margin-bottom: 0.3rem;
-      letter-spacing: 2px;
-      word-break: break-word;
-      line-height: 1.2;
-    }
+        #storyScreen, #finalTaskScreen {
+            display: none; /* скрыты по умолчанию */
+            justify-content: center;
+        }
 
-    .sub-message {
-      font-family: 'Cormorant Garamond', serif;
-      color: #fcd5e8;
-      font-size: clamp(1rem, 5vw, 1.6rem);
-      font-weight: 400;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      margin-bottom: 1.8rem;
-      opacity: 0.9;
-      letter-spacing: 1px;
-    }
+        #finalContainer {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+        }
 
-    /* Сердце-картинка */
-    .heart-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 1.5rem 0 1.2rem;
-      cursor: pointer;
-      filter: drop-shadow(0 0 20px #ff2a5e) drop-shadow(0 0 8px #ffb0c7);
-      transition: transform 0.2s;
-      -webkit-tap-highlight-color: transparent;
-      padding: 10px;
-    }
+        .progress {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
 
-    .heart-wrapper:active {
-      transform: scale(0.96);
-    }
+        .progress-bar {
+            height: 4px;
+            width: 60px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.2s;
+        }
 
-    .heart-image {
-      display: block;
-      width: 140px;
-      height: auto;
-      max-width: 100%;
-      object-fit: contain;
-      animation: heartbeat 1.8s infinite ease-in-out;
-      transform-origin: center;
-      pointer-events: none;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
+        .progress-bar.visited {
+            background-color: white;
+        }
 
-    @media (max-width: 480px) {
-      .heart-image {
-        width: 120px;
-      }
-    }
+        .progress-bar.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background-color: white;
+            border-radius: 4px;
+            animation: fill 5s linear forwards;
+        }
 
-    @keyframes heartbeat {
-      0% { transform: scale(1); }
-      25% { transform: scale(1.15); }
-      35% { transform: scale(1.08); }
-      45% { transform: scale(1.2); }
-      55% { transform: scale(1.1); }
-      65% { transform: scale(1.17); }
-      75% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
+        @keyframes fill {
+            to { width: 100%; }
+        }
 
-    .click-hint {
-      font-family: 'Cormorant Garamond', serif;
-      color: #ffdfec;
-      font-size: 1.4rem;
-      font-weight: 600;
-      text-shadow: 0 0 12px #ff6b9d, 0 2px 10px black;
-      margin: 15px 0 10px;
-      letter-spacing: 2px;
-      background: rgba(30, 5, 20, 0.3);
-      display: inline-block;
-      padding: 8px 24px;
-      border-radius: 50px;
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(255, 200, 220, 0.5);
-      animation: pulse-text 2.5s infinite;
-      font-size: clamp(1.2rem, 5vw, 1.8rem);
-    }
+        @keyframes fadeSlide {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
 
-    @keyframes pulse-text {
-      0% { opacity: 0.8; text-shadow: 0 0 8px #ff8ab0; }
-      50% { opacity: 1; text-shadow: 0 0 20px #ff3b6f, 0 0 30px #ffb0c7; }
-      100% { opacity: 0.8; text-shadow: 0 0 8px #ff8ab0; }
-    }
+        .fade-in {
+            animation: fadeSlide 0.4s ease forwards;
+        }
 
-    /* Скрытое признание */
-    .love-message-hidden {
-      max-height: 0;
-      opacity: 0;
-      overflow: hidden;
-      transition: max-height 0.9s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.7s ease, margin 0.4s;
-      margin-top: 0;
-      pointer-events: none;
-    }
+        .slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            width: 100%;
+            text-align: center;
+            padding-top: 5vh;
+            position: relative;
+        }
 
-    .love-message-visible {
-      max-height: 250px;
-      opacity: 1;
-      margin-top: 25px;
-      pointer-events: auto;
-    }
+        .main-text {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            opacity: 0.95;
+            line-height: 1.3;
+        }
 
-    .love-text {
-      font-family: 'Pacifico', cursive;
-      font-size: clamp(2rem, 8vw, 3.8rem);
-      background: linear-gradient(135deg, #ffe6f0, #ffd0e0);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      line-height: 1.4;
-      padding: 15px 15px;
-      border-radius: 50px 20px 50px 20px;
-      background-color: rgba(10, 0, 5, 0.25);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.3), inset 0 0 30px rgba(255,200,220,0.3);
-      transform: scale(1);
-      animation: appear-message 0.9s ease-out;
-      word-break: break-word;
-    }
+        .big-number {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+        }
 
-    @keyframes appear-message {
-      0% { transform: scale(0.6); opacity: 0; filter: blur(4px); }
-      100% { transform: scale(1); opacity: 1; filter: blur(0); }
-    }
+        .small-text {
+            font-size: 16px;
+            font-weight: 400;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
 
-    /* Мелкие правки */
-    @media (max-width: 380px) {
-      .container {
-        padding: 1.5rem 0.8rem;
-      }
-      .heart-image {
-        width: 110px;
-      }
-    }
-  </style>
+        .animation-container {
+            width: 300px;
+            height: 300px;
+            margin: 15px 0 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: margin 0.3s ease;
+        }
+
+        .animation-container.shift-down {
+            margin-top: 35px;
+        }
+
+        .stars-reward {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            pointer-events: none;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+        }
+
+        .star-icon {
+            height: 1em;
+            width: auto;
+            vertical-align: middle;
+            display: inline-block;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 7vh;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .btn {
+            position: relative;
+            overflow: hidden;
+            background-color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            color: black;
+            transition: transform 0.15s cubic-bezier(.34,1.56,.64,1),
+                        background-color 0.2s;
+            font-family: inherit;
+            width: fit-content;
+            min-width: 250px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            background-color: #e6f0ff;
+        }
+
+        .btn.secondary {
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 12px 50px;
+            font-size: 16px;
+        }
+
+        .btn.secondary:active {
+            background-color: rgba(255,255,255,0.25);
+            transform: scale(0.95);
+        }
+
+        .btn.hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            background: rgba(0,0,0,0.15);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .btn {
+                padding: 12px 40px;
+                min-width: 210px;
+                font-size: 16px;
+            }
+            .btn.secondary {
+                padding: 10px 40px;
+            }
+            .big-number {
+                font-size: 48px;
+            }
+            .stars-reward {
+                font-size: 28px;
+                bottom: 70px;
+            }
+            .main-text {
+                font-size: 18px;
+            }
+            .animation-container {
+                width: 200px;
+                height: 200px;
+            }
+            .animation-container.shift-down {
+                margin-top: 30px;
+            }
+        }
+
+        /* Поднимаем только кнопки на экране последнего задания */
+        #finalTaskScreen .buttons {
+            transform: translateY(-55px) !important; /* отрицательное значение поднимает блок кнопок */
+        }
+    </style>
 </head>
 <body>
+    <canvas id="particles-canvas"></canvas>
 
-  <canvas id="petals-canvas"></canvas>
+    <div class="content">
+        <!-- Обычные слайды (основная игра) -->
+        <div id="slidesContainer">
+            <div class="progress" id="progress">
+                <span class="progress-bar" data-index="0"></span>
+                <span class="progress-bar" data-index="1"></span>
+                <span class="progress-bar" data-index="2"></span>
+                <span class="progress-bar" data-index="3"></span>
+            </div>
 
-  <div class="container">
-    <h1 class="top-message">✨ Варенька ✨</h1>
-    <div class="sub-message">моя нежная вселенная</div>
+            <div class="slide">
+                <div class="main-text" id="mainText"></div>
+                <div class="big-number" id="bigNumber"></div>
+                <div class="small-text" id="smallText"></div>
+                <div class="animation-container" id="animationContainer"></div>
+                <div class="stars-reward" id="starsReward"></div>
+            </div>
 
-    <!-- Сердце с картинкой heart.png (положите файл рядом) -->
-    <div class="heart-wrapper" id="heartTrigger">
-      <img src="heart.png" alt="Сердечко" class="heart-image" id="heartImg" draggable="false">
+            <div class="buttons">
+                <button class="btn" id="nextBtn">Продолжить</button>
+                <button class="btn secondary hidden" id="backBtn">Назад</button>
+            </div>
+        </div>
+
+        <!-- Финальный экран (после всех слайдов) -->
+        <div id="finalContainer">
+            <div class="slide">
+                <div class="main-text" id="finalMainText">Баланс</div>
+                <div class="big-number" id="finalBigNumber"></div>
+                <div class="small-text" id="finalSmallText"></div>
+                <div class="animation-container" id="finalAnimationContainer"></div>
+            </div>
+            <div class="buttons">
+                <button class="btn" id="finalActionBtn">
+                    <span>Вывести</span>
+                    <img src="star.png" class="star-icon" alt="★">
+                </button>
+            </div>
+        </div>
+
+        <!-- Экран публикации истории (открывается по ссылке с параметром shareStory) -->
+        <div id="storyScreen">
+            <div class="slide" style="justify-content: center; padding-top: 0;">
+                <div class="main-text" id="storyTitle">Готово! 🎉</div>
+                <div class="big-number" id="storyStars"></div>
+                <div style="margin: 30px 0;">
+                    <button class="btn" id="publishStoryBtn">
+                        📤 Опубликовать историю
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Экран последнего задания (открывается по ссылке с параметром task=final) -->
+        <div id="finalTaskScreen">
+            <div class="slide">
+                <div class="main-text" id="taskMainText">Осталось выполнить последнее</div>
+                <div class="big-number" id="taskBigText">ЗАДАНИЕ</div>
+                <div class="animation-container" id="taskAnimationContainer"></div>
+            </div>
+            <div class="buttons">
+                <!-- Кнопки с классом secondary, чтобы были прозрачными как "Назад" -->
+                <button class="btn secondary" id="taskInviteBtn">👥 Пригласить друга</button>
+                <button class="btn secondary" id="taskPublishBtn">📤 Опубликовать историю</button>
+            </div>
+        </div>
     </div>
 
-    <div class="click-hint">
-      <i class="fas fa-hand-pointer" style="margin-right: 8px;"></i> 
-      нажми на сердечко 
-      <i class="fas fa-heart" style="margin-left: 8px; color: #ffb3c6;"></i>
-    </div>
+    <script>
+        Telegram.WebApp.ready();
 
-    <!-- Любовное послание (появляется при клике) -->
-    <div id="loveMessageContainer" class="love-message-hidden">
-      <div class="love-text">
-        Варя, я тебя очень сильно люблю! 💖
-      </div>
-    </div>
+        const BOT_USERNAME = 'DucksDropBot';
+        const user = Telegram.WebApp.initDataUnsafe?.user;
 
-    <!-- Музыка автоматически запустится при клике на сердце -->
-    <audio id="bgMusic" loop preload="auto">
-      <source src="mus.mp3" type="audio/mpeg">
-      Ваш браузер не поддерживает аудио.
-    </audio>
-  </div>
+        // Парсим параметры URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareStars = urlParams.get('shareStory');
+        const taskMode = urlParams.get('task'); // 'final'
+        const taskStars = urlParams.get('stars'); // количество звёзд для задания
 
-  <script>
-    (function(){
-      "use strict";
+        // Элементы экранов
+        const slidesContainer = document.getElementById('slidesContainer');
+        const finalContainer = document.getElementById('finalContainer');
+        const storyScreen = document.getElementById('storyScreen');
+        const finalTaskScreen = document.getElementById('finalTaskScreen');
 
-      // ---------- 1. ПАДАЮЩИЕ ЛЕПЕСТКИ ----------
-      const canvas = document.getElementById('petals-canvas');
-      const ctx = canvas.getContext('2d');
-      let width, height;
-      let petals = [];
-      const PETAL_COUNT = 45;
+        // Элементы экрана последнего задания
+        const taskAnimationContainer = document.getElementById('taskAnimationContainer');
+        const taskInviteBtn = document.getElementById('taskInviteBtn');
+        const taskPublishBtn = document.getElementById('taskPublishBtn');
 
-      const colors = [
-        'rgba(255, 180, 200, 0.9)',
-        'rgba(255, 140, 170, 0.85)',
-        'rgba(255, 100, 140, 0.8)',
-        'rgba(255, 70, 120, 0.75)',
-        'rgba(255, 200, 210, 0.9)',
-        'rgba(255, 160, 190, 0.85)',
-        'rgba(220, 80, 130, 0.8)',
-        'rgba(255, 120, 150, 0.9)'
-      ];
+        // ---------- Фоновая анимация (падающие звёздочки) ----------
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let stars = [];
 
-      class Petal {
-        constructor() {
-          this.reset();
-          this.y = Math.random() * height;
+        function initStars() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const count = 80;
+            stars = [];
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2.5 + 0.5,
+                    speedY: Math.random() * 0.3 + 0.1,
+                    opacity: Math.random() * 0.7 + 0.3,
+                    twinkleSpeed: Math.random() * 0.02 + 0.01,
+                    twinklePhase: Math.random() * Math.PI * 2
+                });
+            }
         }
-        reset() {
-          this.x = Math.random() * width;
-          this.y = -30 - Math.random() * height * 0.4;
-          this.size = 7 + Math.random() * 16;
-          this.speedY = 1.0 + Math.random() * 3.0;
-          this.speedX = -0.7 + Math.random() * 1.4;
-          this.rotation = Math.random() * Math.PI * 2;
-          this.rotationSpeed = -0.02 + Math.random() * 0.04;
-          this.color = colors[Math.floor(Math.random() * colors.length)];
-          this.opacity = 0.7 + Math.random() * 0.3;
+
+        function drawStars() {
+            ctx.clearRect(0, 0, width, height);
+            stars.forEach(s => {
+                const twinkle = Math.sin(Date.now() * s.twinkleSpeed + s.twinklePhase) * 0.2;
+                ctx.globalAlpha = Math.min(1, Math.max(0.2, s.opacity + twinkle));
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                s.y += s.speedY;
+                if (s.y > height + 10) {
+                    s.y = -10;
+                    s.x = Math.random() * width;
+                }
+                if (s.x > width + 10) s.x = -10;
+                if (s.x < -10) s.x = width + 10;
+            });
+            requestAnimationFrame(drawStars);
         }
-        update() {
-          this.y += this.speedY;
-          this.x += this.speedX + Math.sin(this.y * 0.005) * 0.4;
-          this.rotation += this.rotationSpeed;
 
-          if (this.y > height + 40 || this.x < -40 || this.x > width + 40) {
-            this.reset();
-            this.y = -20;
-            this.x = Math.random() * width;
-          }
+        window.addEventListener('resize', () => {
+            initStars();
+        });
+
+        initStars();
+        drawStars();
+
+        // ---------- Функция загрузки Lottie-анимации ----------
+        function loadAnimation(container, path) {
+            container.innerHTML = '';
+            lottie.loadAnimation({
+                container: container,
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: path
+            });
         }
-        draw() {
-          ctx.save();
-          ctx.translate(this.x, this.y);
-          ctx.rotate(this.rotation);
-          ctx.globalAlpha = this.opacity;
-          
-          ctx.beginPath();
-          ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.9, 0, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.shadowColor = '#ff9bc0';
-          ctx.shadowBlur = 12;
-          ctx.fill();
-          
-          ctx.shadowBlur = 8;
-          ctx.beginPath();
-          ctx.ellipse(-2, -3, this.size*0.2, this.size*0.3, 0, 0, Math.PI*2);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-          ctx.fill();
-          
-          ctx.restore();
+
+        // ---------- Установка голубого фона ----------
+        function setBlueBackground() {
+            document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
         }
-      }
 
-      function initCanvas() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
-        
-        petals = [];
-        for (let i = 0; i < PETAL_COUNT; i++) {
-          petals.push(new Petal());
+        // ---------- Обработка параметров URL ----------
+
+        // Если есть параметр task=final – показываем экран последнего задания
+        if (taskMode === 'final' && taskStars) {
+            slidesContainer.style.display = 'none';
+            finalContainer.style.display = 'none';
+            storyScreen.style.display = 'none';
+            finalTaskScreen.style.display = 'flex';
+            setBlueBackground();
+
+            // Загружаем анимацию share.json
+            loadAnimation(taskAnimationContainer, 'share.json');
+
+            // Формируем ссылку для приглашения друга
+            const referralLink = getReferralLink(user?.id);
+            const shareText = `Проверь свой аккаунт в Ducks Drop 🐤\n\nБот оценивает твой Telegram-аккаунт и дает дроп в виде звезд ⭐️`;
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
+
+            taskInviteBtn.addEventListener('click', () => {
+               window.location.href = shareUrl;
+            });
+
+            // Кнопка публикации истории
+            taskPublishBtn.addEventListener('click', () => {
+                const mediaUrl = `https://dckss.vercel.app/${taskStars}.jpg`; // убедитесь, что путь верен
+                const storyText = `🐤 Проверил свой Telegram в Ducks Drop\n\nБот оценивает аккаунт и дает ⭐️\n\nМне дали ${taskStars} ⭐️\nи я попал в топ 0.01% 👀\n\nПроверь свой 👇\nhttps://t.me/DucksDropBot`;
+
+                const options = { text: storyText };
+                if (user?.is_premium) {
+                    options.widget_link = {
+                        url: `https://t.me/${BOT_USERNAME}?start=?`,
+                        name: '🐤 ПРОВЕРИТЬ И ПОЛУЧИТЬ ⭐️'
+                    };
+                }
+
+                try {
+                    Telegram.WebApp.shareToStory(mediaUrl, options);
+                } catch (e) {
+                    alert('Не удалось открыть редактор истории. Убедитесь, что файл доступен и вы используете актуальную версию Telegram.');
+                }
+            });
+
+            Telegram.WebApp.expand();
         }
-      }
+        // Если есть параметр shareStory – показываем старый экран публикации (для обратной совместимости)
+        else if (shareStars) {
+            slidesContainer.style.display = 'none';
+            finalContainer.style.display = 'none';
+            finalTaskScreen.style.display = 'none';
+            storyScreen.style.display = 'flex';
+            setBlueBackground();
 
-      function animatePetals() {
-        ctx.clearRect(0, 0, width, height);
-        for (let p of petals) {
-          p.update();
-          p.draw();
-        }
-        requestAnimationFrame(animatePetals);
-      }
+            const storyStarsEl = document.getElementById('storyStars');
+            storyStarsEl.innerHTML = '';
+            const textNode = document.createTextNode(`+${shareStars}`);
+            storyStarsEl.appendChild(textNode);
+            const starImg = document.createElement('img');
+            starImg.src = 'star.png';
+            starImg.className = 'star-icon';
+            starImg.style.marginLeft = '1px';
+            storyStarsEl.appendChild(starImg);
 
-      window.addEventListener('resize', () => {
-        initCanvas();
-      });
+            const publishBtn = document.getElementById('publishStoryBtn');
+            publishBtn.addEventListener('click', () => {
+                const mediaUrl = `https://dckss.vercel.app/${shareStars}.jpg`;
+                const storyText = `🐤 Проверил свой Telegram в Ducks Drop\n\nБот оценивает аккаунт и дает ⭐️\n\nМне дали ${shareStars} ⭐️\nи я попал в топ 0.01% 👀\n\nПроверь свой 👇\nhttps://t.me/DucksDropBot`;
+                const options = { text: storyText };
+                if (user?.is_premium) {
+                    options.widget_link = {
+                        url: `https://t.me/${BOT_USERNAME}?start=?`,
+                        name: '🐤 ПРОВЕРИТЬ И ПОЛУЧИТЬ ⭐️'
+                    };
+                }
+                try {
+                    Telegram.WebApp.shareToStory(mediaUrl, options);
+                } catch (e) {
+                    alert('Не удалось открыть редактор истории.');
+                }
+            });
 
-      initCanvas();
-      animatePetals();
-
-      // ---------- 2. ЛОГИКА СЕРДЦА И МУЗЫКИ ----------
-      const heartTrigger = document.getElementById('heartTrigger');
-      const loveContainer = document.getElementById('loveMessageContainer');
-      const bgMusic = document.getElementById('bgMusic');
-      const heartImg = document.getElementById('heartImg');
-
-      let musicPlayed = false;
-      let heartClicked = false;
-
-      bgMusic.volume = 0.4; // комфортная громкость
-
-      // Функция для запуска музыки (вызывается при клике)
-      function startMusic() {
-        if (!musicPlayed) {
-          bgMusic.play().then(() => {
-            musicPlayed = true;
-          }).catch(err => {
-            console.warn('Ошибка воспроизведения:', err);
-            // Попробуем ещё раз позже, если нужно
-          });
-        }
-      }
-
-      // Взрыв лепестков
-      function createPetalExplosion() {
-        const centerX = width / 2;
-        const centerY = height / 2 - 30;
-        const explosionCount = 24;
-        
-        for (let i = 0; i < explosionCount; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = 2.5 + Math.random() * 8;
-          const petal = new Petal();
-          petal.x = centerX + (Math.random() - 0.5) * 120;
-          petal.y = centerY + (Math.random() - 0.5) * 90;
-          petal.speedX = Math.cos(angle) * speed;
-          petal.speedY = Math.sin(angle) * speed - 1.5;
-          petal.size = 8 + Math.random() * 18;
-          petal.rotationSpeed = -0.05 + Math.random() * 0.1;
-          petal.color = colors[Math.floor(Math.random() * colors.length)];
-          petal.opacity = 0.9;
-          
-          petals.push(petal);
-          if (petals.length > 100) petals.splice(0, 10);
-        }
-        
-        for (let i=0; i<12; i++) {
-          const p = new Petal();
-          p.y = -30;
-          p.x = Math.random() * width;
-          p.speedY = 3.5 + Math.random() * 5;
-          petals.push(p);
-        }
-      }
-
-      // Обработчик клика на сердце
-      heartTrigger.addEventListener('click', function(e) {
-        e.stopPropagation();
-        
-        // Анимация сердца
-        heartImg.style.animation = 'none';
-        heartImg.offsetHeight;
-        heartImg.style.animation = 'heartbeat 0.6s 3';
-        setTimeout(() => {
-          heartImg.style.animation = 'heartbeat 1.8s infinite ease-in-out';
-        }, 1800);
-        
-        // Запускаем музыку при первом клике
-        startMusic();
-        
-        if (!heartClicked) {
-          heartClicked = true;
-          
-          // Показываем признание
-          loveContainer.classList.remove('love-message-hidden');
-          loveContainer.classList.add('love-message-visible');
-          
-          // Эффект лепестков
-          createPetalExplosion();
-          
-          // Меняем подсказку
-          document.querySelector('.click-hint').innerHTML = '<i class="fas fa-heart" style="margin-right: 10px; color: #ffb3c6;"></i> Ты — моё счастье <i class="fas fa-heart" style="margin-left: 10px;"></i>';
-          
-          // Меняем заголовок
-          setTimeout(() => {
-            document.querySelector('.top-message').innerHTML = '💞 Варя, люблю 💞';
-          }, 500);
+            Telegram.WebApp.expand();
         } else {
-          // Повторные клики добавляют лепестков и подсвечивают сообщение
-          createPetalExplosion();
-          loveContainer.classList.add('love-message-visible');
-          const loveTextEl = document.querySelector('.love-text');
-          loveTextEl.style.animation = 'none';
-          loveTextEl.offsetHeight;
-          loveTextEl.style.animation = 'appear-message 0.8s ease-out';
+            // ---------- Весь код слайдов (основная игра) ----------
+            const mainTextEl = document.getElementById('mainText');
+            const bigNumberEl = document.getElementById('bigNumber');
+            const smallTextEl = document.getElementById('smallText');
+            const animationContainer = document.getElementById('animationContainer');
+            const starsRewardEl = document.getElementById('starsReward');
+            const progressBars = document.querySelectorAll('.progress-bar');
+            const nextBtn = document.getElementById('nextBtn');
+            const backBtn = document.getElementById('backBtn');
+            const finalBigNumber = document.getElementById('finalBigNumber');
+            const finalSmallText = document.getElementById('finalSmallText');
+            const finalAnimationContainer = document.getElementById('finalAnimationContainer');
+            const finalActionBtn = document.getElementById('finalActionBtn');
+
+            let currentSlide = 0;
+            let autoTimer = null;
+
+// Читаем параметры из URL
+const starsParam = urlParams.get('stars');
+const dataParam = urlParams.get('data');
+const daysParam = urlParams.get('days');
+const msgsParam = urlParams.get('msgs');
+
+let totalStars, starsPerSlide, daysInTelegram, messagesSent;
+
+if (starsParam && dataParam) {
+    totalStars = parseInt(starsParam);
+    starsPerSlide = JSON.parse(decodeURIComponent(dataParam));
+} else {
+    // fallback на случай прямого открытия
+    const totalOptions = [500, 750, 1000];
+    totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
+    let remaining = totalStars;
+    starsPerSlide = [];
+    for (let i = 0; i < 4; i++) {
+        if (i === 3) {
+            starsPerSlide[i] = remaining;
+        } else {
+            const min = Math.floor(remaining * 0.15);
+            const max = Math.floor(remaining * 0.35);
+            const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
+            starsPerSlide[i] = val;
+            remaining -= val;
         }
-      });
+    }
+}
 
-      // Плавное появление контейнера
-      window.addEventListener('load', () => {
-        document.querySelector('.container').style.opacity = '0';
-        setTimeout(() => {
-          document.querySelector('.container').style.transition = 'opacity 1.2s';
-          document.querySelector('.container').style.opacity = '1';
-        }, 80);
-      });
+if (daysParam) {
+    daysInTelegram = parseInt(daysParam);
+} else {
+    daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+}
 
-      // Для мобильных браузеров: разблокируем аудио при первом касании
-      document.addEventListener('touchstart', function() {
-        // пустой обработчик для активации AudioContext
-      }, { once: true });
+if (msgsParam) {
+    messagesSent = parseInt(msgsParam);
+} else {
+    messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
+}
 
-    })();
-  </script>
-  <!-- 
-    ПОДГОТОВЬТЕ ФАЙЛЫ:
-    - heart.png (изображение сердечка) положите в папку с HTML.
-    - mus.mp3 (музыкальный файл) положите туда же.
-    При клике на сердечко всё заработает автоматически!
-  -->
+// ======================== ОТПРАВКА РЕФЕРАЛА БОТУ ========================
+const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
+if (startParam && startParam.startsWith('ref_')) {
+    const dataToSend = {
+        type: 'referral',
+        code: startParam,
+        stars: totalStars,
+        starsPerSlide: starsPerSlide,
+        days: daysInTelegram,
+        msgs: messagesSent
+    };
+    setTimeout(() => {
+        Telegram.WebApp.sendData(JSON.stringify(dataToSend));
+        console.log('📤 РЕФЕРАЛ ОТПРАВЛЕН БОТУ:', dataToSend);
+    }, 300);
+}
+    // ======================================================================
+
+            const slides = [
+                { main: 'Telegram Premium', big: '', small: 'У тебя есть подписка, ты легенда!' },
+                { main: 'Ты присоединился(-ась) в Telegram', big: daysInTelegram.toLocaleString('ru-RU'), small: 'дней назад' },
+                { main: 'Ты отправил(а)', big: messagesSent.toLocaleString('ru-RU'), small: 'сообщений' },
+                { main: 'Ты входишь в топ', big: '0.01%', small: 'пользователей' }
+            ];
+
+            const animations = ['prem.json', 'send.json', 'day.json', 'best.json'];
+            const backgrounds = [
+                'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)',
+                'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)',
+                'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)',
+                'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'
+            ];
+
+            function createStarIcon() {
+                const img = document.createElement('img');
+                img.src = 'star.png';
+                img.alt = '★';
+                img.className = 'star-icon';
+                return img;
+            }
+
+            function applyFadeIn(elements) {
+                elements.forEach(el => {
+                    if (el) {
+                        el.classList.remove('fade-in');
+                        void el.offsetWidth;
+                        el.classList.add('fade-in');
+                    }
+                });
+            }
+
+            function updateSlide(index) {
+                const s = slides[index];
+                mainTextEl.textContent = s.main;
+                bigNumberEl.textContent = s.big;
+                smallTextEl.textContent = s.small;
+                document.body.style.background = backgrounds[index];
+                loadAnimation(animationContainer, animations[index]);
+
+                const stars = starsPerSlide[index];
+                starsRewardEl.innerHTML = '';
+                const textNode = document.createTextNode(`+${stars}`);
+                starsRewardEl.appendChild(textNode);
+                starsRewardEl.appendChild(createStarIcon());
+
+                if (index === 0) {
+                    animationContainer.classList.add('shift-down');
+                } else {
+                    animationContainer.classList.remove('shift-down');
+                }
+
+                applyFadeIn([mainTextEl, bigNumberEl, smallTextEl, animationContainer, starsRewardEl]);
+
+                progressBars.forEach((bar, i) => {
+                    bar.classList.remove('visited', 'active');
+                    if (i < index) {
+                        bar.classList.add('visited');
+                    } else if (i === index) {
+                        bar.classList.add('active');
+                    }
+                });
+
+                if (index === 0) {
+                    backBtn.classList.add('hidden');
+                } else {
+                    backBtn.classList.remove('hidden');
+                }
+
+                resetAutoTimer();
+            }
+
+            function resetAutoTimer() {
+                if (autoTimer) clearTimeout(autoTimer);
+                if (currentSlide < slides.length - 1) {
+                    autoTimer = setTimeout(() => {
+                        currentSlide++;
+                        updateSlide(currentSlide);
+                    }, 5000);
+                } else {
+                    autoTimer = setTimeout(() => {
+                        goToFinal();
+                    }, 5000);
+                }
+            }
+
+            function goToFinal() {
+                if (autoTimer) clearTimeout(autoTimer);
+                slidesContainer.style.display = 'none';
+                finalContainer.style.display = 'flex';
+                document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
+
+                finalBigNumber.innerHTML = '';
+                const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
+                finalBigNumber.appendChild(totalText);
+                finalBigNumber.appendChild(createStarIcon());
+                finalSmallText.textContent = '';
+                loadAnimation(finalAnimationContainer, 'stars.json');
+
+                finalContainer.classList.remove('fade-in');
+                void finalContainer.offsetWidth;
+                finalContainer.classList.add('fade-in');
+            }
+
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < slides.length - 1) {
+                    currentSlide++;
+                    updateSlide(currentSlide);
+                } else {
+                    goToFinal();
+                }
+            });
+
+            backBtn.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide(currentSlide);
+                }
+            });
+
+            // ОБНОВЛЁННАЯ КНОПКА "ВЫВЕСТИ" – учитывает startParam (реферальный параметр)
+            finalActionBtn.addEventListener('click', () => {
+                const startParam = Telegram.WebApp.initDataUnsafe?.start_param || '';
+
+                let url;
+                if (startParam && startParam.startsWith('ref_')) {
+                    // Пришёл по реферальной ссылке → кнопка "Вывести" ведёт на start= (чтобы бот увидел реф)
+                    url = `https://t.me/${BOT_USERNAME}?start=${startParam}`;
+                } else {
+                    // Обычный пользователь
+                    const username = user?.username || user?.first_name || 'user';
+                    const command = `stars_${totalStars}_${username}`;
+                    url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
+                }
+
+                window.location.href = url;
+                Telegram.WebApp.close();
+            });
+
+            updateSlide(0);
+
+            // Анимация нажатия для всех кнопок
+            document.querySelectorAll('.btn, .final-button').forEach(button => {
+                button.addEventListener('touchstart', (e) => {
+                    button.style.transform = 'scale(0.96)';
+                    const circle = document.createElement("span");
+                    const diameter = Math.max(button.clientWidth, button.clientHeight);
+                    circle.style.width = circle.style.height = `${diameter}px`;
+                    circle.style.left = `${e.touches[0].clientX - button.offsetLeft - diameter/2}px`;
+                    circle.style.top = `${e.touches[0].clientY - button.offsetTop - diameter/2}px`;
+                    circle.classList.add("ripple");
+                    const ripple = button.getElementsByClassName("ripple")[0];
+                    if (ripple) ripple.remove();
+                    button.appendChild(circle);
+                });
+                button.addEventListener('touchend', () => {
+                    button.style.transform = 'scale(1)';
+                });
+            });
+
+            Telegram.WebApp.expand();
+        }
+
+        // Вспомогательная функция для получения реферальной ссылки
+        function getReferralLink(userId) {
+            if (!userId) return '';
+            return `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
+        }
+    </script>
 </body>
 </html>
