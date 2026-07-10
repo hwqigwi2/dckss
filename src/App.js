@@ -540,4 +540,257 @@ function ProfileScreen({ balance, invited, earned, spent, transactions, promo, s
                 <div style={{ fontWeight: 600, fontSize: 13 }}>{tx.label}</div>
                 <div className="text-secondary" style={{ fontSize: 11 }}>{tx.date}</div>
               </div>
-              <div style={{ fontWeight: 800, fontSize: 13.5 }} className={tx.type === "earn" ? "text-success" :
+              <div style={{ fontWeight: 800, fontSize: 13.5 }} className={tx.type === "earn" ? "text-success" : "text-danger"}>
+                {tx.amount > 0 ? "+" : ""}{fmt(tx.amount)}
+              </div>
+            </div>
+          </GlassCard>
+        ))
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Tab bar                                                              */
+/* ------------------------------------------------------------------ */
+function TabBar({ active, onChange }) {
+  const tabs = [
+    { id: "home", label: "Главная", icon: Home },
+    { id: "tasks", label: "Задания", icon: ListChecks },
+    { id: "shop", label: "Магазин", icon: ShoppingBag },
+    { id: "refs", label: "Рефералы", icon: Users },
+    { id: "profile", label: "Профиль", icon: User },
+  ];
+  return (
+    <div className="tab-bar">
+      {tabs.map((t) => (
+        <button key={t.id} className={`tab-item ${active === t.id ? "active" : ""}`} onClick={() => onChange(t.id)}>
+          <t.icon size={18} />
+          <span>{t.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Root app                                                             */
+/* ------------------------------------------------------------------ */
+export default function StreamerRewardsPrototype() {
+  const [tab, setTab] = useState("home");
+  const [balance, setBalance] = useState(12450);
+  const [earned, setEarned] = useState(15600);
+  const [spent, setSpent] = useState(3150);
+  const [tasks, setTasks] = useState(initialTasks);
+  const [dailyClaimed, setDailyClaimed] = useState(false);
+  const [streak] = useState(2);
+  const [spinning, setSpinning] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [platformConnected, setPlatformConnected] = useState(false);
+  const [kickConnected, setKickConnected] = useState(false);
+  const [invited] = useState(7);
+  const [refEarned] = useState(3140);
+  const [copied, setCopied] = useState(false);
+  const [buyItem, setBuyItem] = useState(null);
+  const [shop, setShop] = useState(shopItems);
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [promo, setPromo] = useState("");
+  const [promoMsg, setPromoMsg] = useState(null);
+  const [promoUsed, setPromoUsed] = useState(false);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const showToast = (text, kind = "success") => {
+    setToast({ text, kind });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2400);
+  };
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const addTx = (type, label, amount) => {
+    setTransactions((prev) => [{ id: `tx-${Date.now()}`, type, label, amount, date: "Только что" }, ...prev]);
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 700);
+  };
+
+  const handleClaimDaily = () => {
+    if (dailyClaimed) return;
+    setDailyClaimed(true);
+    setBalance((b) => b + 500);
+    setEarned((e) => e + 500);
+    addTx("earn", "Ежедневный бонус", 500);
+    showToast("Ежедневный бонус +500 коинов 🎁");
+  };
+
+  const handleSpin = () => {
+    if (spinning) return;
+    setSpinning(true);
+    setTimeout(() => {
+      const options = [50, 100, 150, 200, 300, 500];
+      const reward = options[Math.floor(Math.random() * options.length)];
+      setBalance((b) => b + reward);
+      setEarned((e) => e + reward);
+      addTx("earn", "Испытать удачу", reward);
+      setSpinning(false);
+      showToast(`Удача улыбнулась! +${reward} коинов ✨`);
+    }, 1100);
+  };
+
+  const handleCompleteTask = (id) => {
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id !== id) return t;
+        if (t.type === "auto") return { ...t, status: "checking" };
+        if (t.type === "manual") return { ...t, status: "pending" };
+        return t;
+      })
+    );
+    const task = tasks.find((t) => t.id === id);
+    if (task?.type === "auto") {
+      setTimeout(() => {
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: "completed" } : t)));
+        setBalance((b) => b + task.reward);
+        setEarned((e) => e + task.reward);
+        addTx("earn", task.title, task.reward);
+        showToast(`Задание выполнено +${task.reward} коинов ✅`);
+      }, 900);
+    } else if (task?.type === "manual") {
+      showToast("Отправлено на модерацию 👀", "info");
+    }
+  };
+
+  const handleConnectPlatform = () => {
+    setPlatformConnected(true);
+    showToast("Платформа подключена ✅");
+  };
+
+  const handleToggleKick = () => {
+    setKickConnected(true);
+    showToast("Аккаунт подключён ✅");
+  };
+
+  const handleCopy = () => {
+    const link = `https://t.me/${BRAND.toLowerCase()}_rewards_bot?start=ref_482910`;
+    try {
+      navigator.clipboard && navigator.clipboard.writeText(link);
+    } catch (e) {}
+    setCopied(true);
+    showToast("Ссылка скопирована 🔗");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleBuyConfirm = (item) => {
+    if (balance < item.price) {
+      showToast("Недостаточно коинов", "error");
+      return;
+    }
+    setBalance((b) => b - item.price);
+    setSpent((s) => s + item.price);
+    setShop((prev) => prev.map((s) => (s.id === item.id ? { ...s, stock: Math.max(0, s.stock - 1) } : s)));
+    addTx("spend", `Покупка: ${item.title}`, -item.price);
+    setBuyItem(null);
+    showToast(`Куплено: ${item.title} 🎉`);
+  };
+
+  const handlePromoSubmit = () => {
+    if (!promo.trim()) return;
+    if (promoUsed) {
+      setPromoMsg({ ok: false, text: "Промокод уже был активирован." });
+      return;
+    }
+    if (promo.trim().toUpperCase() === "WELCOME100") {
+      setBalance((b) => b + 300);
+      setEarned((e) => e + 300);
+      addTx("earn", "Промокод WELCOME100", 300);
+      setPromoMsg({ ok: true, text: "Промокод активирован: +300 коинов" });
+      setPromoUsed(true);
+      showToast("Промокод активирован +300 🎁");
+    } else {
+      setPromoMsg({ ok: false, text: "Промокод не найден." });
+    }
+    setPromo("");
+  };
+
+  return (
+    <div className="app-shell">
+      <div className="phone-frame">
+        <div className="dynamic-island" />
+        <div className="status-bar">
+          <span>9:41</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <Signal size={13} />
+            <Wifi size={13} />
+            <BatteryFull size={15} />
+          </div>
+        </div>
+
+        {toast && (
+          <div className="toast">
+            {toast.kind === "error" ? <AlertTriangle size={16} className="text-danger" /> : <Sparkles size={16} className="text-accent" />}
+            <span>{toast.text}</span>
+          </div>
+        )}
+
+        <div className="screen-scroll" key={tab}>
+          {tab === "home" && (
+            <HomeScreen
+              balance={balance}
+              streak={streak}
+              isLive={true}
+              onGoTasks={() => setTab("tasks")}
+              onSpin={handleSpin}
+              spinning={spinning}
+              onClaimDaily={handleClaimDaily}
+              dailyClaimed={dailyClaimed}
+              platformConnected={platformConnected}
+              onConnectPlatform={handleConnectPlatform}
+            />
+          )}
+          {tab === "tasks" && (
+            <TasksScreen
+              tasks={tasks}
+              balance={balance}
+              dailyClaimed={dailyClaimed}
+              onComplete={handleCompleteTask}
+              onClaimDaily={handleClaimDaily}
+              onGoReferrals={() => setTab("refs")}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+            />
+          )}
+          {tab === "shop" && (
+            <ShopScreen items={shop} balance={balance} onBuy={setBuyItem} onRefresh={handleRefresh} refreshing={refreshing} />
+          )}
+          {tab === "refs" && (
+            <ReferralsScreen referrals={referralsList} invited={invited} earned={refEarned} copied={copied} onCopy={handleCopy} />
+          )}
+          {tab === "profile" && (
+            <ProfileScreen
+              balance={balance}
+              invited={invited}
+              earned={earned}
+              spent={spent}
+              transactions={transactions}
+              promo={promo}
+              setPromo={setPromo}
+              onPromoSubmit={handlePromoSubmit}
+              promoMsg={promoMsg}
+              kickConnected={kickConnected}
+              tgConnected={true}
+              onToggleKick={handleToggleKick}
+            />
+          )}
+        </div>
+
+        <TabBar active={tab === "refs" ? "refs" : tab} onChange={setTab} />
+      </div>
+
+      <BuyModal item={buyItem} balance={balance} onConfirm={handleBuyConfirm} onCancel={() => setBuyItem(null)} />
+    </div>
+  );
+}
