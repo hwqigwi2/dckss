@@ -1,806 +1,971 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ducks Drop</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Home, ListChecks, ShoppingBag, Users, User, RefreshCw, Zap, Send,
+  MessageCircle, Flame, Link2, Gift, Share2, Copy, Check, X, ChevronRight,
+  Sparkles, Trophy, Wallet, Coins, Loader2, AlertTriangle, Tv, HelpCircle,
+  Ticket, Package, Wifi, Signal, BatteryFull, Dices, Clock, CheckCircle2,
+  ArrowUpRight, ArrowDownRight, ExternalLink, PlusCircle,
+} from "lucide-react";
 
-        body {
-            height: 100vh;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 8px 16px 4px;
-            position: relative;
-            touch-action: pan-y pinch-zoom;
-            transition: background 0.5s ease;
-        }
+/* ------------------------------------------------------------------ */
+/* Design tokens — Liquid Glass (per spec)                             */
+/* ------------------------------------------------------------------ */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-        #particles-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
+.app-shell{
+  --bg-base:#0A0A0D;
+  --glass-bg:rgba(255,255,255,0.06);
+  --glass-bg-strong:rgba(255,255,255,0.10);
+  --glass-border:rgba(255,255,255,0.14);
+  --glass-highlight:rgba(255,255,255,0.35);
+  --accent:#4B7BFF;
+  --accent-2:#34D399;
+  --warning:#FBBF24;
+  --danger:#FB7185;
+  --text-primary:#F5F6F8;
+  --text-secondary:rgba(245,246,248,0.55);
+  --radius-card:24px;
+  --radius-pill:999px;
+  --blur:24px;
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:#000;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:28px 12px;
+  box-sizing:border-box;
+}
+.app-shell *{box-sizing:border-box;}
+.app-shell svg{stroke-width:1.5;}
 
-        .content {
-            position: relative;
-            z-index: 2;
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            height: 100%;
-        }
+.phone-frame{
+  position:relative;
+  width:100%;
+  max-width:412px;
+  height:min(870px,94vh);
+  background:radial-gradient(120% 60% at 50% 0%, #101018 0%, var(--bg-base) 45%);
+  border-radius:44px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 40px 100px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.03);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  color:var(--text-primary);
+}
 
-        #finalContainer .buttons {
-            transform: translateY(-50px);
-        }
-        
-        #slidesContainer, #storyScreen, #finalTaskScreen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
+.status-bar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 26px 4px; font-size:13px; font-weight:600; flex-shrink:0;
+}
+.dynamic-island{
+  position:absolute; top:12px; left:50%; transform:translateX(-50%);
+  width:104px; height:28px; background:#000; border-radius:999px; z-index:30;
+}
 
-        #storyScreen, #finalTaskScreen {
-            display: none; /* скрыты по умолчанию */
-            justify-content: center;
-        }
+.screen-scroll{
+  flex:1; overflow-y:auto; padding:6px 16px 128px; position:relative;
+  animation:fadeUp .35s ease;
+}
+.screen-scroll::-webkit-scrollbar{display:none;}
+@keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
-        #finalContainer {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            height: 100%;
-        }
+.glow{ position:absolute; border-radius:50%; filter:blur(60px); pointer-events:none; z-index:0; }
 
-        .progress {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            width: 100%;
-            margin-top: 4px;
-            margin-bottom: 8px;
-            flex-shrink: 0;
-        }
+.glass-card{
+  position:relative; z-index:1;
+  background:var(--glass-bg);
+  backdrop-filter:blur(var(--blur)) saturate(160%);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(160%);
+  border:1px solid var(--glass-border);
+  border-radius:var(--radius-card);
+  box-shadow:0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 var(--glass-highlight);
+  padding:18px;
+}
+.glass-card-strong{ background:var(--glass-bg-strong); }
+.glass-card.pressable{ cursor:pointer; transition:transform .15s ease; }
+.glass-card.pressable:active{ transform:scale(0.98); }
 
-        .progress-bar {
-            height: 4px;
-            width: 60px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 4px;
-            position: relative;
-            overflow: hidden;
-            transition: background-color 0.2s;
-        }
+.text-secondary{ color:var(--text-secondary); }
+.text-accent{ color:var(--accent); }
+.text-success{ color:var(--accent-2); }
+.text-danger{ color:var(--danger); }
+.text-warning{ color:var(--warning); }
 
-        .progress-bar.visited {
-            background-color: white;
-        }
+.pill-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  background:var(--accent); color:#fff; border:none; border-radius:var(--radius-pill);
+  padding:12px 20px; font-weight:700; font-size:14px; cursor:pointer;
+  transition:transform .15s ease, filter .15s ease, opacity .15s ease;
+  white-space:nowrap;
+}
+.pill-btn:active{ transform:scale(0.96); }
+.pill-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+.pill-btn.success{ background:var(--accent-2); color:#062018; }
+.pill-btn.sm{ padding:9px 14px; font-size:13px; }
+.pill-btn.full{ width:100%; }
 
-        .progress-bar.active::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background-color: white;
-            border-radius: 4px;
-            animation: fill 5s linear forwards;
-        }
+.outline-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  background:transparent; border:1px solid var(--glass-border); color:var(--text-primary);
+  border-radius:var(--radius-pill); padding:11px 18px; font-weight:600; font-size:13px;
+  cursor:pointer; transition:all .15s ease; white-space:nowrap;
+}
+.outline-btn:active{ transform:scale(0.96); background:var(--glass-bg-strong); }
+.outline-btn:disabled{ opacity:0.35; cursor:not-allowed; }
+.outline-btn.full{ width:100%; }
 
-        @keyframes fill {
-            to { width: 100%; }
-        }
+.progress-track{ width:100%; height:6px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
+.progress-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); transition:width .5s ease; }
 
-        @keyframes fadeSlide {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+.tag{
+  display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:999px;
+  font-size:11.5px; font-weight:700; letter-spacing:.2px;
+  background:rgba(255,255,255,0.08); color:var(--text-secondary);
+}
 
-        .fade-in {
-            animation: fadeSlide 0.4s ease forwards;
-        }
+.icon-badge{
+  width:40px; height:40px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.08); flex-shrink:0;
+}
 
-        .slide {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            flex: 1;
-            width: 100%;
-            text-align: center;
-            padding-top: 5vh;
-            position: relative;
-        }
+.tab-bar{
+  position:absolute; bottom:14px; left:14px; right:14px;
+  background:rgba(20,20,24,0.6);
+  backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid var(--glass-border); border-radius:var(--radius-pill);
+  box-shadow:0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+  display:flex; padding:6px; z-index:20;
+}
+.tab-item{
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  padding:9px 4px; border-radius:999px; border:none; background:transparent; color:var(--text-secondary);
+  cursor:pointer; transition:all .25s cubic-bezier(.2,.8,.2,1);
+}
+.tab-item.active{ background:var(--accent); color:#fff; box-shadow:0 4px 14px rgba(75,123,255,0.5); }
+.tab-item span{ font-size:10px; font-weight:700; }
 
-        .main-text {
-            font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            opacity: 0.95;
-            line-height: 1.3;
-        }
+.toast{
+  position:absolute; top:18px; left:16px; right:16px; z-index:50;
+  display:flex; align-items:center; gap:10px; padding:13px 16px;
+  background:rgba(24,24,28,0.85); backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border); border-radius:18px;
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);
+  animation:toastIn .25s ease;
+  font-size:13.5px; font-weight:600;
+}
+@keyframes toastIn{ from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
 
-        .big-number {
-            font-size: 56px;
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 4px;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1px;
-        }
+.modal-backdrop{
+  position:absolute; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px);
+  display:flex; align-items:flex-end; justify-content:center; z-index:60; animation:fadeIn .2s ease;
+}
+@keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+.modal-sheet{ width:100%; padding:16px; animation:sheetUp .25s cubic-bezier(.2,.8,.2,1); }
+@keyframes sheetUp{ from{transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
 
-        .small-text {
-            font-size: 16px;
-            font-weight: 400;
-            opacity: 0.8;
-            margin-bottom: 15px;
-        }
+.avatar{
+  width:46px; height:46px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; color:#fff;
+  background:linear-gradient(135deg,var(--accent),#7C5CFF);
+}
 
-        .animation-container {
-            width: 300px;
-            height: 300px;
-            margin: 15px 0 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: margin 0.3s ease;
-        }
+.spin-dial{
+  width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:conic-gradient(var(--accent), #7C5CFF, var(--accent-2), var(--accent));
+  animation:none;
+}
+.spin-dial.spinning{ animation:spin 1s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
 
-        .animation-container.shift-down {
-            margin-top: 35px;
-        }
+.streak-ring{ position:relative; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.streak-ring-inner{ position:absolute; inset:4px; border-radius:50%; background:var(--bg-base); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; }
+`;
 
-        .stars-reward {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: rgba(255, 255, 255, 0.9);
-            text-align: center;
-            pointer-events: none;
-            z-index: 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1px;
-        }
+/* ------------------------------------------------------------------ */
+/* Mock data                                                           */
+/* ------------------------------------------------------------------ */
+const BRAND = "NOVA";
 
-        .star-icon {
-            height: 1em;
-            width: auto;
-            vertical-align: middle;
-            display: inline-block;
-        }
+const initialTasks = [
+  { id: "t-daily", type: "daily", tagIcon: Gift, tagLabel: "Ежедневный", title: "Ежедневный бонус", desc: "Заходите каждый день — награда растёт со стриком.", reward: 500 },
+  { id: "t1", type: "auto", tagIcon: Send, tagLabel: "Подписка на ТГ", title: "Подпишитесь на Telegram-канал", desc: `Официальный канал ${BRAND} — анонсы эфиров и розыгрыши.`, reward: 350, status: "available", actionLabel: "Открыть канал" },
+  { id: "t2", type: "auto", tagIcon: Tv, tagLabel: "Соцсеть", title: "Подпишитесь на канал стрима", desc: "Подписка на основной канал трансляций.", reward: 500, status: "available", actionLabel: "Открыть канал" },
+  { id: "t3", type: "manual", tagIcon: MessageCircle, tagLabel: "Активность", title: "Напишите в чат во время стрима", desc: "Любое сообщение в чат в течение прямого эфира.", reward: 150, status: "available" },
+  { id: "t4", type: "streak", tagIcon: Flame, tagLabel: "Стрик", title: "Смотрите стримы 3 дня подряд", desc: "Отмечается автоматически во время эфира.", reward: 300, progress: 2, goal: 3 },
+  { id: "t5", type: "referral", tagIcon: Link2, tagLabel: "Рефералка", title: "Пригласите 3 друзей", desc: "Бонус начисляется при достижении цели.", reward: 1000, progress: 1, goal: 3 },
+  { id: "t6", type: "manual", tagIcon: Share2, tagLabel: "Ручное", title: "Репост стрима друзьям", desc: "Поделитесь ссылкой на эфир и приложите скрин в бота.", reward: 250, status: "available", warning: "Важно: заявка проверяется модератором вручную." },
+];
 
-        .buttons {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            margin-bottom: 7vh;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 2;
-        }
+const shopItems = [
+  { id: "s1", title: "Telegram Premium", subtitle: "3 месяца", price: 2500, stock: 50 },
+  { id: "s2", title: "Промокод −10%", subtitle: "На донат платформы", price: 800, stock: 120 },
+  { id: "s3", title: "Кейс «Сюрприз»", subtitle: "Случайный предмет", price: 1200, stock: 34 },
+  { id: "s4", title: "Худи с лого", subtitle: "Мерч, S–XL", price: 8000, stock: 12 },
+  { id: "s5", title: "Наушники", subtitle: "Розыгрыш техники", price: 15000, stock: 3 },
+  { id: "s6", title: "Игровая мышь", subtitle: "Розыгрыш техники", price: 12000, stock: 0 },
+];
 
-        .btn {
-            position: relative;
-            overflow: hidden;
-            background-color: white;
-            border: none;
-            border-radius: 30px;
-            padding: 14px 50px;
-            font-size: 18px;
-            font-weight: 600;
-            color: black;
-            transition: transform 0.15s cubic-bezier(.34,1.56,.64,1),
-                        background-color 0.2s;
-            font-family: inherit;
-            width: fit-content;
-            min-width: 250px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
+const referralsList = [
+  { id: "r1", name: "Дмитрий К.", date: "08.07.2026", status: "active" },
+  { id: "r2", name: "Марина В.", date: "05.07.2026", status: "active" },
+  { id: "r3", name: "Игорь П.", date: "02.07.2026", status: "pending" },
+];
 
-        .btn:active {
-            transform: scale(0.95);
-            background-color: #e6f0ff;
-        }
+const initialTransactions = [
+  { id: "tx1", type: "earn", label: "Ежедневный бонус", amount: 500, date: "Сегодня, 09:12" },
+  { id: "tx2", type: "spend", label: "Покупка: Промокод −10%", amount: -800, date: "Вчера, 21:40" },
+  { id: "tx3", type: "earn", label: "Реферал: Марина В.", amount: 200, date: "05.07.2026" },
+  { id: "tx4", type: "earn", label: "Подписка на канал", amount: 350, date: "03.07.2026" },
+];
 
-        .btn.secondary {
-            background-color: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(5px);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.5);
-            padding: 12px 50px;
-            font-size: 16px;
-        }
+const fmt = (n) => n.toLocaleString("ru-RU");
 
-        .btn.secondary:active {
-            background-color: rgba(255,255,255,0.25);
-            transform: scale(0.95);
-        }
-
-        .btn.hidden {
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            transform: scale(0);
-            background: rgba(0,0,0,0.15);
-            animation: ripple 0.6s linear;
-            pointer-events: none;
-        }
-
-        @keyframes ripple {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
-        }
-
-        @media (max-width: 380px) {
-            .btn {
-                padding: 12px 40px;
-                min-width: 210px;
-                font-size: 16px;
-            }
-            .btn.secondary {
-                padding: 10px 40px;
-            }
-            .big-number {
-                font-size: 48px;
-            }
-            .stars-reward {
-                font-size: 28px;
-                bottom: 70px;
-            }
-            .main-text {
-                font-size: 18px;
-            }
-            .animation-container {
-                width: 200px;
-                height: 200px;
-            }
-            .animation-container.shift-down {
-                margin-top: 30px;
-            }
-        }
-
-        /* Поднимаем только кнопки на экране последнего задания */
-        #finalTaskScreen .buttons {
-            transform: translateY(-55px) !important; /* отрицательное значение поднимает блок кнопок */
-        }
-    </style>
-</head>
-<body>
-    <canvas id="particles-canvas"></canvas>
-
-    <div class="content">
-        <!-- Обычные слайды (основная игра) -->
-        <div id="slidesContainer">
-            <div class="progress" id="progress">
-                <span class="progress-bar" data-index="0"></span>
-                <span class="progress-bar" data-index="1"></span>
-                <span class="progress-bar" data-index="2"></span>
-                <span class="progress-bar" data-index="3"></span>
-            </div>
-
-            <div class="slide">
-                <div class="main-text" id="mainText"></div>
-                <div class="big-number" id="bigNumber"></div>
-                <div class="small-text" id="smallText"></div>
-                <div class="animation-container" id="animationContainer"></div>
-                <div class="stars-reward" id="starsReward"></div>
-            </div>
-
-            <div class="buttons">
-                <button class="btn" id="nextBtn">Продолжить</button>
-                <button class="btn secondary hidden" id="backBtn">Назад</button>
-            </div>
-        </div>
-
-        <!-- Финальный экран (после всех слайдов) -->
-        <div id="finalContainer">
-            <div class="slide">
-                <div class="main-text" id="finalMainText">Баланс</div>
-                <div class="big-number" id="finalBigNumber"></div>
-                <div class="small-text" id="finalSmallText"></div>
-                <div class="animation-container" id="finalAnimationContainer"></div>
-            </div>
-            <div class="buttons">
-                <button class="btn" id="finalActionBtn">
-                    <span>Вывести</span>
-                    <img src="star.png" class="star-icon" alt="★">
-                </button>
-            </div>
-        </div>
-
-        <!-- Экран публикации истории (открывается по ссылке с параметром shareStory) -->
-        <div id="storyScreen">
-            <div class="slide" style="justify-content: center; padding-top: 0;">
-                <div class="main-text" id="storyTitle">Готово! 🎉</div>
-                <div class="big-number" id="storyStars"></div>
-                <div style="margin: 30px 0;">
-                    <button class="btn" id="publishStoryBtn">
-                        📤 Опубликовать историю
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Экран последнего задания (открывается по ссылке с параметром task=final) -->
-        <div id="finalTaskScreen">
-            <div class="slide">
-                <div class="main-text" id="taskMainText">Осталось выполнить последнее</div>
-                <div class="big-number" id="taskBigText">ЗАДАНИЕ</div>
-                <div class="animation-container" id="taskAnimationContainer"></div>
-            </div>
-            <div class="buttons">
-                <!-- Кнопки с классом secondary, чтобы были прозрачными как "Назад" -->
-                <button class="btn secondary" id="taskInviteBtn">👥 Пригласить друга</button>
-                <button class="btn secondary" id="taskPublishBtn">📤 Опубликовать историю</button>
-            </div>
-        </div>
+/* ------------------------------------------------------------------ */
+/* Reusable primitives                                                 */
+/* ------------------------------------------------------------------ */
+function GlassCard({ children, glow, glowColor = "rgba(75,123,255,0.28)", strong, className = "", style, onClick }) {
+  return (
+    <div
+      className={`glass-card ${strong ? "glass-card-strong" : ""} ${onClick ? "pressable" : ""} ${className}`}
+      style={{ ...style, overflow: "visible" }}
+      onClick={onClick}
+    >
+      {glow && <div className="glow" style={{ width: 140, height: 140, background: glowColor, top: -30, left: -20 }} />}
+      {children}
     </div>
+  );
+}
 
-    <script>
-        Telegram.WebApp.ready();
+function PillButton({ children, onClick, disabled, variant, full, sm, icon: Icon }) {
+  return (
+    <button
+      className={`pill-btn ${variant === "success" ? "success" : ""} ${full ? "full" : ""} ${sm ? "sm" : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {Icon && <Icon size={15} />}
+      {children}
+    </button>
+  );
+}
 
-        const BOT_USERNAME = 'DucksDropBot';
-        const user = Telegram.WebApp.initDataUnsafe?.user;
+function OutlineButton({ children, onClick, disabled, full }) {
+  return (
+    <button className={`outline-btn ${full ? "full" : ""}`} onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  );
+}
 
-        // Парсим параметры URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const shareStars = urlParams.get('shareStory');
-        const taskMode = urlParams.get('task'); // 'final'
-        const taskStars = urlParams.get('stars'); // количество звёзд для задания
+function ProgressBar({ value, max }) {
+  const pct = Math.min(100, (value / max) * 100);
+  return (
+    <div className="progress-track">
+      <div className="progress-fill" style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
 
-        // Элементы экранов
-        const slidesContainer = document.getElementById('slidesContainer');
-        const finalContainer = document.getElementById('finalContainer');
-        const storyScreen = document.getElementById('storyScreen');
-        const finalTaskScreen = document.getElementById('finalTaskScreen');
+function Tag({ icon: Icon, children }) {
+  return (
+    <span className="tag">
+      <Icon size={12} />
+      {children}
+    </span>
+  );
+}
 
-        // Элементы экрана последнего задания
-        const taskAnimationContainer = document.getElementById('taskAnimationContainer');
-        const taskInviteBtn = document.getElementById('taskInviteBtn');
-        const taskPublishBtn = document.getElementById('taskPublishBtn');
+function BalanceChip({ balance }) {
+  return (
+    <div className="tag" style={{ background: "rgba(75,123,255,0.16)", color: "var(--text-primary)" }}>
+      <Coins size={13} className="text-accent" />
+      {fmt(balance)}
+    </div>
+  );
+}
 
-        // ---------- Фоновая анимация (падающие звёздочки) ----------
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let stars = [];
+function ScreenHeader({ title, balance, onRefresh, spinning }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 2px 16px" }}>
+      <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>{title}</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <BalanceChip balance={balance} />
+        <button
+          onClick={onRefresh}
+          style={{ width: 34, height: 34, borderRadius: 999, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-primary)", cursor: "pointer" }}
+        >
+          <RefreshCw size={15} className={spinning ? "spin-dial spinning" : ""} style={{ background: "none" }} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
-        function initStars() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
+/* ------------------------------------------------------------------ */
+/* Home                                                                 */
+/* ------------------------------------------------------------------ */
+function HomeScreen({ balance, streak, isLive, onGoTasks, onSpin, spinning, onClaimDaily, dailyClaimed, platformConnected, onConnectPlatform }) {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 2px 18px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="avatar">ВД</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>Вадим Д.</div>
+            <div className="text-secondary" style={{ fontSize: 12.5 }}>Добро пожаловать 👋</div>
+          </div>
+        </div>
+        <button style={{ width: 36, height: 36, borderRadius: 999, background: "var(--glass-bg-strong)", border: "1px solid var(--glass-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-primary)", cursor: "pointer" }}>
+          <RefreshCw size={16} />
+        </button>
+      </div>
 
-            const count = 80;
-            stars = [];
-            for (let i = 0; i < count; i++) {
-                stars.push({
-                    x: Math.random() * width,
-                    y: Math.random() * height,
-                    radius: Math.random() * 2.5 + 0.5,
-                    speedY: Math.random() * 0.3 + 0.1,
-                    opacity: Math.random() * 0.7 + 0.3,
-                    twinkleSpeed: Math.random() * 0.02 + 0.01,
-                    twinklePhase: Math.random() * Math.PI * 2
-                });
-            }
-        }
+      <GlassCard glow glowColor="rgba(75,123,255,0.3)" style={{ marginBottom: 14 }}>
+        <div className="text-secondary" style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 6 }}>Баланс</div>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Coins size={26} className="text-accent" />
+            <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: -0.5 }}>{fmt(balance)}</span>
+          </div>
+          <PillButton icon={Zap} onClick={onGoTasks}>Заработать</PillButton>
+        </div>
+        <div style={{ height: 1, background: "var(--glass-border)", margin: "14px 0 10px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 7, height: 7, borderRadius: 999, background: isLive ? "var(--accent-2)" : "var(--text-secondary)", boxShadow: isLive ? "0 0 8px var(--accent-2)" : "none" }} />
+          <span style={{ fontSize: 13, fontWeight: 600 }} className={isLive ? "text-success" : "text-secondary"}>
+            {isLive ? "Стрим сейчас идёт" : "Сейчас офлайн"}
+          </span>
+        </div>
+      </GlassCard>
 
-        function drawStars() {
-            ctx.clearRect(0, 0, width, height);
-            stars.forEach(s => {
-                const twinkle = Math.sin(Date.now() * s.twinkleSpeed + s.twinklePhase) * 0.2;
-                ctx.globalAlpha = Math.min(1, Math.max(0.2, s.opacity + twinkle));
-                ctx.fillStyle = 'white';
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-                ctx.fill();
+      <GlassCard style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="icon-badge"><Tv size={18} /></div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Платформа стрима</div>
+            <div className="text-secondary" style={{ fontSize: 12.5 }}>
+              {platformConnected ? "Подключено" : "Подключите аккаунт для авто-проверок"}
+            </div>
+          </div>
+          {platformConnected ? (
+            <CheckCircle2 size={20} className="text-success" />
+          ) : (
+            <PillButton sm onClick={onConnectPlatform}>Подключить</PillButton>
+          )}
+        </div>
+      </GlassCard>
 
-                s.y += s.speedY;
-                if (s.y > height + 10) {
-                    s.y = -10;
-                    s.x = Math.random() * width;
-                }
-                if (s.x > width + 10) s.x = -10;
-                if (s.x < -10) s.x = width + 10;
-            });
-            requestAnimationFrame(drawStars);
-        }
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <GlassCard onClick={!spinning ? onSpin : undefined}>
+          <div className={`spin-dial ${spinning ? "spinning" : ""}`} style={{ marginBottom: 10 }}>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Dices size={20} />
+            </div>
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>Испытать удачу</div>
+          <div className="text-secondary" style={{ fontSize: 12 }}>Крутите раз в день</div>
+        </GlassCard>
 
-        window.addEventListener('resize', () => {
-            initStars();
-        });
+        <GlassCard>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <div className="streak-ring" style={{ background: `conic-gradient(var(--accent-2) ${(streak / 3) * 100}%, rgba(255,255,255,0.08) 0)` }}>
+              <div className="streak-ring-inner">{streak}/3</div>
+            </div>
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>Стрик просмотра</div>
+          <div className="text-secondary" style={{ fontSize: 12 }}>+300 за 3 дня</div>
+        </GlassCard>
+      </div>
 
-        initStars();
-        drawStars();
+      <GlassCard glow glowColor="rgba(52,211,153,0.22)" style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div className="icon-badge"><Trophy size={18} className="text-success" /></div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Конкурсы</div>
+            <div className="text-secondary" style={{ fontSize: 12.5 }}>Розыгрыш наушников — 3 дня осталось</div>
+          </div>
+          <ChevronRight size={18} className="text-secondary" />
+        </div>
+      </GlassCard>
 
-        // ---------- Функция загрузки Lottie-анимации ----------
-        function loadAnimation(container, path) {
-            container.innerHTML = '';
-            lottie.loadAnimation({
-                container: container,
-                renderer: 'svg',
-                loop: true,
-                autoplay: true,
-                path: path
-            });
-        }
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+        <GlassCard onClick={dailyClaimed ? undefined : onClaimDaily}>
+          <Gift size={20} className={dailyClaimed ? "text-secondary" : "text-accent"} style={{ marginBottom: 8 }} />
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>Ежедневный бонус</div>
+          <div className={dailyClaimed ? "text-success" : "text-secondary"} style={{ fontSize: 12, marginTop: 2 }}>
+            {dailyClaimed ? "Получено ✓" : "+500 коинов"}
+          </div>
+        </GlassCard>
+        <GlassCard>
+          <HelpCircle size={20} className="text-secondary" style={{ marginBottom: 8 }} />
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>FAQ / Поддержка</div>
+          <div className="text-secondary" style={{ fontSize: 12, marginTop: 2 }}>Есть вопрос?</div>
+        </GlassCard>
+      </div>
 
-        // ---------- Установка голубого фона ----------
-        function setBlueBackground() {
-            document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
-        }
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, textAlign: "center", padding: "4px 4px 12px" }}>
+        {[["12 480", "Пользователей"], ["4.2М", "Заработано"], ["8 150", "Наград выдано"]].map(([n, l]) => (
+          <div key={l}>
+            <div style={{ fontWeight: 800, fontSize: 15 }}>{n}</div>
+            <div className="text-secondary" style={{ fontSize: 11 }}>{l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-        // ---------- Обработка параметров URL ----------
+/* ------------------------------------------------------------------ */
+/* Tasks                                                                */
+/* ------------------------------------------------------------------ */
+function TaskCard({ task, dailyClaimed, onComplete, onClaimDaily, onGoReferrals }) {
+  const Icon = task.tagIcon;
 
-        // Если есть параметр task=final – показываем экран последнего задания
-        if (taskMode === 'final' && taskStars) {
-            slidesContainer.style.display = 'none';
-            finalContainer.style.display = 'none';
-            storyScreen.style.display = 'none';
-            finalTaskScreen.style.display = 'flex';
-            setBlueBackground();
-
-            // Загружаем анимацию share.json
-            loadAnimation(taskAnimationContainer, 'share.json');
-
-            // Формируем ссылку для приглашения друга
-            const referralLink = getReferralLink(user?.id);
-            const shareText = `Проверь свой аккаунт в Ducks Drop 🐤\n\nБот оценивает твой Telegram-аккаунт и дает дроп в виде звезд ⭐️`;
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`;
-
-            taskInviteBtn.addEventListener('click', () => {
-               window.location.href = shareUrl;
-            });
-
-            // Кнопка публикации истории
-            taskPublishBtn.addEventListener('click', () => {
-                const mediaUrl = `https://dckss.vercel.app/${taskStars}.jpg`; // убедитесь, что путь верен
-                const storyText = `🐤 Проверил свой Telegram в Ducks Drop\n\nБот оценивает аккаунт и дает ⭐️\n\nМне дали ${taskStars} ⭐️\nи я попал в топ 0.01% 👀\n\nПроверь свой 👇\nhttps://t.me/DucksDropBot`;
-
-                const options = { text: storyText };
-                if (user?.is_premium) {
-                    options.widget_link = {
-                        url: `https://t.me/${BOT_USERNAME}?start=?`,
-                        name: '🐤 ПРОВЕРИТЬ И ПОЛУЧИТЬ ⭐️'
-                    };
-                }
-
-                try {
-                    Telegram.WebApp.shareToStory(mediaUrl, options);
-                } catch (e) {
-                    alert('Не удалось открыть редактор истории. Убедитесь, что файл доступен и вы используете актуальную версию Telegram.');
-                }
-            });
-
-            Telegram.WebApp.expand();
-        }
-        // Если есть параметр shareStory – показываем старый экран публикации (для обратной совместимости)
-        else if (shareStars) {
-            slidesContainer.style.display = 'none';
-            finalContainer.style.display = 'none';
-            finalTaskScreen.style.display = 'none';
-            storyScreen.style.display = 'flex';
-            setBlueBackground();
-
-            const storyStarsEl = document.getElementById('storyStars');
-            storyStarsEl.innerHTML = '';
-            const textNode = document.createTextNode(`+${shareStars}`);
-            storyStarsEl.appendChild(textNode);
-            const starImg = document.createElement('img');
-            starImg.src = 'star.png';
-            starImg.className = 'star-icon';
-            starImg.style.marginLeft = '1px';
-            storyStarsEl.appendChild(starImg);
-
-            const publishBtn = document.getElementById('publishStoryBtn');
-            publishBtn.addEventListener('click', () => {
-                const mediaUrl = `https://dckss.vercel.app/${shareStars}.jpg`;
-                const storyText = `🐤 Проверил свой Telegram в Ducks Drop\n\nБот оценивает аккаунт и дает ⭐️\n\nМне дали ${shareStars} ⭐️\nи я попал в топ 0.01% 👀\n\nПроверь свой 👇\nhttps://t.me/DucksDropBot`;
-                const options = { text: storyText };
-                if (user?.is_premium) {
-                    options.widget_link = {
-                        url: `https://t.me/${BOT_USERNAME}?start=?`,
-                        name: '🐤 ПРОВЕРИТЬ И ПОЛУЧИТЬ ⭐️'
-                    };
-                }
-                try {
-                    Telegram.WebApp.shareToStory(mediaUrl, options);
-                } catch (e) {
-                    alert('Не удалось открыть редактор истории.');
-                }
-            });
-
-            Telegram.WebApp.expand();
-        } else {
-            // ---------- Весь код слайдов (основная игра) ----------
-            const mainTextEl = document.getElementById('mainText');
-            const bigNumberEl = document.getElementById('bigNumber');
-            const smallTextEl = document.getElementById('smallText');
-            const animationContainer = document.getElementById('animationContainer');
-            const starsRewardEl = document.getElementById('starsReward');
-            const progressBars = document.querySelectorAll('.progress-bar');
-            const nextBtn = document.getElementById('nextBtn');
-            const backBtn = document.getElementById('backBtn');
-            const finalBigNumber = document.getElementById('finalBigNumber');
-            const finalSmallText = document.getElementById('finalSmallText');
-            const finalAnimationContainer = document.getElementById('finalAnimationContainer');
-            const finalActionBtn = document.getElementById('finalActionBtn');
-
-            let currentSlide = 0;
-            let autoTimer = null;
-
-// Читаем параметры из URL
-const starsParam = urlParams.get('stars');
-const dataParam = urlParams.get('data');
-const daysParam = urlParams.get('days');
-const msgsParam = urlParams.get('msgs');
-
-let totalStars, starsPerSlide, daysInTelegram, messagesSent;
-
-if (starsParam && dataParam) {
-    totalStars = parseInt(starsParam);
-    starsPerSlide = JSON.parse(decodeURIComponent(dataParam));
-} else {
-    // fallback на случай прямого открытия
-    const totalOptions = [500, 750, 1000];
-    totalStars = totalOptions[Math.floor(Math.random() * totalOptions.length)];
-    let remaining = totalStars;
-    starsPerSlide = [];
-    for (let i = 0; i < 4; i++) {
-        if (i === 3) {
-            starsPerSlide[i] = remaining;
-        } else {
-            const min = Math.floor(remaining * 0.15);
-            const max = Math.floor(remaining * 0.35);
-            const val = (max > min) ? Math.floor(Math.random() * (max - min + 1)) + min : min;
-            starsPerSlide[i] = val;
-            remaining -= val;
-        }
+  const rightAction = () => {
+    if (task.type === "daily") {
+      return dailyClaimed
+        ? <span className="tag" style={{ background: "rgba(52,211,153,0.16)" }}><Check size={12} className="text-success" />Готово</span>
+        : <PillButton sm onClick={onClaimDaily}>Забрать</PillButton>;
     }
+    if (task.type === "streak") return null;
+    if (task.type === "referral") return <OutlineButton onClick={onGoReferrals}>Пригласить</OutlineButton>;
+    if (task.status === "checking") return <PillButton sm disabled icon={Loader2}>Проверка…</PillButton>;
+    if (task.status === "pending") return <span className="tag text-warning" style={{ background: "rgba(251,191,36,0.14)" }}>На проверке</span>;
+    if (task.status === "completed") return <span className="tag" style={{ background: "rgba(52,211,153,0.16)" }}><Check size={12} className="text-success" />Выполнено</span>;
+    if (task.type === "auto") {
+      return (
+        <div style={{ display: "flex", gap: 6 }}>
+          <OutlineButton onClick={() => {}}>Перейти</OutlineButton>
+          <PillButton sm onClick={() => onComplete(task.id)}>Проверить</PillButton>
+        </div>
+      );
+    }
+    return <PillButton sm onClick={() => onComplete(task.id)}>Выполнить</PillButton>;
+  };
+
+  return (
+    <GlassCard style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+        <Tag icon={Icon}>{task.tagLabel}</Tag>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 800, fontSize: 14 }}>
+          <Coins size={14} className="text-accent" />+{fmt(task.reward)}
+        </div>
+      </div>
+      <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 4 }}>{task.title}</div>
+      <div className="text-secondary" style={{ fontSize: 12.5, lineHeight: 1.5, marginBottom: 12 }}>{task.desc}</div>
+
+      {(task.type === "streak" || task.type === "referral") && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, marginBottom: 6 }} className="text-secondary">
+            <span>Прогресс</span><span>{task.progress}/{task.goal}</span>
+          </div>
+          <ProgressBar value={task.progress} max={task.goal} />
+        </div>
+      )}
+
+      {task.warning && (
+        <div style={{ display: "flex", gap: 6, alignItems: "flex-start", fontSize: 11.5, marginBottom: 12 }} className="text-warning">
+          <AlertTriangle size={13} style={{ marginTop: 1, flexShrink: 0 }} />
+          <span>{task.warning}</span>
+        </div>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>{rightAction()}</div>
+    </GlassCard>
+  );
 }
 
-if (daysParam) {
-    daysInTelegram = parseInt(daysParam);
-} else {
-    daysInTelegram = Math.floor(Math.random() * 1500) + 500;
+function TasksScreen({ tasks, balance, dailyClaimed, onComplete, onClaimDaily, onGoReferrals, onRefresh, refreshing }) {
+  return (
+    <div>
+      <ScreenHeader title="Задания" balance={balance} onRefresh={onRefresh} spinning={refreshing} />
+      <div className="text-secondary" style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" }}>
+        Доступные
+      </div>
+      {tasks.map((t) => (
+        <TaskCard key={t.id} task={t} dailyClaimed={dailyClaimed} onComplete={onComplete} onClaimDaily={onClaimDaily} onGoReferrals={onGoReferrals} />
+      ))}
+    </div>
+  );
 }
 
-if (msgsParam) {
-    messagesSent = parseInt(msgsParam);
-} else {
-    messagesSent = Math.floor(Math.random() * (23842 - 4789 + 1)) + 4789;
+/* ------------------------------------------------------------------ */
+/* Shop                                                                 */
+/* ------------------------------------------------------------------ */
+function ShopScreen({ items, balance, onBuy, onRefresh, refreshing }) {
+  return (
+    <div>
+      <ScreenHeader title="Магазин" balance={balance} onRefresh={onRefresh} spinning={refreshing} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {items.map((it) => (
+          <GlassCard key={it.id} style={{ padding: 14 }}>
+            <div style={{ position: "relative", height: 78, borderRadius: 16, background: "linear-gradient(135deg, rgba(75,123,255,0.18), rgba(124,92,255,0.12))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+              <Package size={26} className="text-accent" />
+              <span className="tag" style={{ position: "absolute", top: 6, right: 6, fontSize: 10, padding: "3px 7px", background: "rgba(0,0,0,0.5)" }}>
+                {it.stock > 0 ? `${it.stock} шт.` : "нет"}
+              </span>
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 13.5, marginBottom: 2 }}>{it.title}</div>
+            <div className="text-secondary" style={{ fontSize: 11.5, marginBottom: 10 }}>{it.subtitle}</div>
+            <PillButton full sm disabled={it.stock === 0} icon={Coins} onClick={() => onBuy(it)}>
+              {it.stock === 0 ? "Раскуплено" : fmt(it.price)}
+            </PillButton>
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-// ======================== ОТПРАВКА РЕФЕРАЛА БОТУ ========================
-const startParam = Telegram.WebApp.initDataUnsafe?.start_param;
-if (startParam && startParam.startsWith('ref_')) {
-    const dataToSend = {
-        type: 'referral',
-        code: startParam,
-        stars: totalStars,
-        starsPerSlide: starsPerSlide,
-        days: daysInTelegram,
-        msgs: messagesSent
-    };
+function BuyModal({ item, balance, onConfirm, onCancel }) {
+  if (!item) return null;
+  const canAfford = balance >= item.price;
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+        <GlassCard strong glow glowColor="rgba(75,123,255,0.3)">
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+            <div style={{ width: 44, height: 4, borderRadius: 999, background: "var(--glass-border)" }} />
+          </div>
+          <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4, textAlign: "center" }}>{item.title}</div>
+          <div className="text-secondary" style={{ fontSize: 13, textAlign: "center", marginBottom: 16 }}>{item.subtitle}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 24, fontWeight: 800, marginBottom: 4 }}>
+            <Coins size={20} className="text-accent" />{fmt(item.price)}
+          </div>
+          {!canAfford && (
+            <div className="text-danger" style={{ fontSize: 12.5, textAlign: "center", marginBottom: 12 }}>
+              Недостаточно коинов — не хватает {fmt(item.price - balance)}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+            <OutlineButton full onClick={onCancel}>Отмена</OutlineButton>
+            <PillButton full disabled={!canAfford} onClick={() => onConfirm(item)}>Подтвердить</PillButton>
+          </div>
+        </GlassCard>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Referrals                                                           */
+/* ------------------------------------------------------------------ */
+function ReferralsScreen({ referrals, invited, earned, copied, onCopy }) {
+  const active = referrals.filter((r) => r.status === "active").length;
+  return (
+    <div>
+      <div style={{ padding: "10px 2px 16px" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Рефералы</h1>
+      </div>
+
+      <GlassCard glow glowColor="rgba(124,92,255,0.28)" style={{ marginBottom: 14 }}>
+        <div style={{ fontWeight: 700, fontSize: 14.5, marginBottom: 4 }}>Реферальная ссылка</div>
+        <div className="text-secondary" style={{ fontSize: 12.5, marginBottom: 12 }}>
+          +200 коинов за друга и 5% от его наград
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(0,0,0,0.25)", border: "1px solid var(--glass-border)", borderRadius: 14, padding: "10px 12px", marginBottom: 12 }}>
+          <span style={{ fontSize: 12.5, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} className="text-secondary">
+            t.me/{BRAND.toLowerCase()}_rewards_bot?start=ref_482910
+          </span>
+          <button onClick={onCopy} style={{ background: "none", border: "none", color: copied ? "var(--accent-2)" : "var(--text-primary)", cursor: "pointer", display: "flex" }}>
+            {copied ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+        </div>
+        <PillButton full icon={Share2} onClick={onCopy}>Поделиться в Telegram</PillButton>
+      </GlassCard>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+        {[[invited, "Приглашено"], [active, "Активных"], [fmt(earned), "Заработано"]].map(([n, l]) => (
+          <GlassCard key={l} style={{ textAlign: "center", padding: 12 }}>
+            <div style={{ fontWeight: 800, fontSize: 17 }}>{n}</div>
+            <div className="text-secondary" style={{ fontSize: 10.5 }}>{l}</div>
+          </GlassCard>
+        ))}
+      </div>
+
+      <GlassCard style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, marginBottom: 8 }}>
+          <span style={{ fontWeight: 700 }}>Бонус за 3 друзей</span>
+          <span className="text-secondary">{active}/3</span>
+        </div>
+        <ProgressBar value={active} max={3} />
+      </GlassCard>
+
+      <div className="text-secondary" style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" }}>
+        Ваши рефералы
+      </div>
+      {referrals.map((r) => (
+        <GlassCard key={r.id} style={{ marginBottom: 10, padding: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="avatar" style={{ width: 38, height: 38, fontSize: 13 }}>
+              {r.name.split(" ").map((p) => p[0]).join("")}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{r.name}</div>
+              <div className="text-secondary" style={{ fontSize: 11.5 }}>{r.date}</div>
+            </div>
+            <span className={`tag ${r.status === "active" ? "text-success" : "text-warning"}`} style={{ background: r.status === "active" ? "rgba(52,211,153,0.14)" : "rgba(251,191,36,0.14)" }}>
+              {r.status === "active" ? "Активен" : "Ожидание"}
+            </span>
+          </div>
+        </GlassCard>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Profile                                                              */
+/* ------------------------------------------------------------------ */
+function ProfileScreen({ balance, invited, earned, spent, transactions, promo, setPromo, onPromoSubmit, promoMsg, kickConnected, tgConnected, onToggleKick }) {
+  return (
+    <div>
+      <div style={{ padding: "10px 2px 16px" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Профиль</h1>
+      </div>
+
+      <GlassCard glow glowColor="rgba(75,123,255,0.28)" style={{ marginBottom: 14, textAlign: "center" }}>
+        <div className="avatar" style={{ width: 64, height: 64, fontSize: 20, margin: "0 auto 10px" }}>ВД</div>
+        <div style={{ fontWeight: 800, fontSize: 16 }}>Вадим Д.</div>
+        <div className="text-secondary" style={{ fontSize: 12.5 }}>@vadandy · ID 482910</div>
+      </GlassCard>
+
+      <div className="text-secondary" style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" }}>
+        Подключённые аккаунты
+      </div>
+      <GlassCard style={{ marginBottom: 14, padding: 6 }}>
+        {[
+          { icon: Send, label: "Telegram-канал", connected: tgConnected, toggle: null },
+          { icon: Tv, label: "Платформа стрима", connected: kickConnected, toggle: onToggleKick },
+        ].map((row, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 8px", borderBottom: i === 0 ? "1px solid var(--glass-border)" : "none" }}>
+            <div className="icon-badge"><row.icon size={17} /></div>
+            <div style={{ flex: 1, fontWeight: 600, fontSize: 13.5 }}>{row.label}</div>
+            {row.connected ? (
+              <span className="tag" style={{ background: "rgba(52,211,153,0.14)" }}><Check size={11} className="text-success" />Подключено</span>
+            ) : (
+              <OutlineButton onClick={row.toggle}>Подключить</OutlineButton>
+            )}
+          </div>
+        ))}
+      </GlassCard>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+        {[
+          [fmt(balance), "Баланс", Wallet],
+          [invited, "Рефералов", Users],
+          [fmt(earned), "Заработано", ArrowUpRight],
+          [fmt(spent), "Потрачено", ArrowDownRight],
+        ].map(([n, l, Ic]) => (
+          <GlassCard key={l} style={{ padding: 14 }}>
+            <Ic size={16} className="text-secondary" style={{ marginBottom: 8 }} />
+            <div style={{ fontWeight: 800, fontSize: 17 }}>{n}</div>
+            <div className="text-secondary" style={{ fontSize: 11.5 }}>{l}</div>
+          </GlassCard>
+        ))}
+      </div>
+
+      <div className="text-secondary" style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" }}>
+        Кейсы
+      </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 14, overflowX: "auto" }}>
+        {[1, 2].map((n) => (
+          <GlassCard key={n} style={{ minWidth: 88, textAlign: "center", padding: 12 }}>
+            <Ticket size={22} className="text-accent" style={{ marginBottom: 6 }} />
+            <div style={{ fontSize: 11.5, fontWeight: 600 }}>Кейс #{n}</div>
+          </GlassCard>
+        ))}
+      </div>
+
+      <GlassCard style={{ marginBottom: 14 }}>
+        <div style={{ fontWeight: 700, fontSize: 13.5, marginBottom: 10 }}>Промокод</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            value={promo}
+            onChange={(e) => setPromo(e.target.value)}
+            placeholder="Введите код"
+            style={{ flex: 1, background: "rgba(0,0,0,0.25)", border: "1px solid var(--glass-border)", borderRadius: 14, padding: "10px 12px", color: "var(--text-primary)", fontSize: 13, outline: "none" }}
+          />
+          <PillButton sm onClick={onPromoSubmit}>Ввести</PillButton>
+        </div>
+        {promoMsg && (
+          <div style={{ fontSize: 12, marginTop: 8 }} className={promoMsg.ok ? "text-success" : "text-danger"}>
+            {promoMsg.text}
+          </div>
+        )}
+      </GlassCard>
+
+      <div className="text-secondary" style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: 0.6, marginBottom: 10, textTransform: "uppercase" }}>
+        История транзакций
+      </div>
+      {transactions.length === 0 ? (
+        <GlassCard style={{ textAlign: "center", padding: 24 }}>
+          <div className="text-secondary" style={{ fontSize: 13 }}>История пуста</div>
+        </GlassCard>
+      ) : (
+        transactions.map((tx) => (
+          <GlassCard key={tx.id} style={{ marginBottom: 10, padding: 13 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div className="icon-badge" style={{ background: tx.type === "earn" ? "rgba(52,211,153,0.14)" : "rgba(251,113,133,0.14)" }}>
+                {tx.type === "earn" ? <ArrowUpRight size={16} className="text-success" /> : <ArrowDownRight size={16} className="text-danger" />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{tx.label}</div>
+                <div className="text-secondary" style={{ fontSize: 11 }}>{tx.date}</div>
+              </div>
+              <div style={{ fontWeight: 800, fontSize: 13.5 }} className={tx.type === "earn" ? "text-success" : "text-danger"}>
+                {tx.amount > 0 ? "+" : ""}{fmt(tx.amount)}
+              </div>
+            </div>
+          </GlassCard>
+        ))
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Tab bar                                                              */
+/* ------------------------------------------------------------------ */
+function TabBar({ active, onChange }) {
+  const tabs = [
+    { id: "home", label: "Главная", icon: Home },
+    { id: "tasks", label: "Задания", icon: ListChecks },
+    { id: "shop", label: "Магазин", icon: ShoppingBag },
+    { id: "refs", label: "Рефералы", icon: Users },
+    { id: "profile", label: "Профиль", icon: User },
+  ];
+  return (
+    <div className="tab-bar">
+      {tabs.map((t) => (
+        <button key={t.id} className={`tab-item ${active === t.id ? "active" : ""}`} onClick={() => onChange(t.id)}>
+          <t.icon size={18} />
+          <span>{t.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Root app                                                             */
+/* ------------------------------------------------------------------ */
+export default function StreamerRewardsPrototype() {
+  const [tab, setTab] = useState("home");
+  const [balance, setBalance] = useState(12450);
+  const [earned, setEarned] = useState(15600);
+  const [spent, setSpent] = useState(3150);
+  const [tasks, setTasks] = useState(initialTasks);
+  const [dailyClaimed, setDailyClaimed] = useState(false);
+  const [streak] = useState(2);
+  const [spinning, setSpinning] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [platformConnected, setPlatformConnected] = useState(false);
+  const [kickConnected, setKickConnected] = useState(false);
+  const [invited] = useState(7);
+  const [refEarned] = useState(3140);
+  const [copied, setCopied] = useState(false);
+  const [buyItem, setBuyItem] = useState(null);
+  const [shop, setShop] = useState(shopItems);
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [promo, setPromo] = useState("");
+  const [promoMsg, setPromoMsg] = useState(null);
+  const [promoUsed, setPromoUsed] = useState(false);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
+
+  const showToast = (text, kind = "success") => {
+    setToast({ text, kind });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2400);
+  };
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  const addTx = (type, label, amount) => {
+    setTransactions((prev) => [{ id: `tx-${Date.now()}`, type, label, amount, date: "Только что" }, ...prev]);
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 700);
+  };
+
+  const handleClaimDaily = () => {
+    if (dailyClaimed) return;
+    setDailyClaimed(true);
+    setBalance((b) => b + 500);
+    setEarned((e) => e + 500);
+    addTx("earn", "Ежедневный бонус", 500);
+    showToast("Ежедневный бонус +500 коинов 🎁");
+  };
+
+  const handleSpin = () => {
+    if (spinning) return;
+    setSpinning(true);
     setTimeout(() => {
-        Telegram.WebApp.sendData(JSON.stringify(dataToSend));
-        console.log('📤 РЕФЕРАЛ ОТПРАВЛЕН БОТУ:', dataToSend);
-    }, 300);
+      const options = [50, 100, 150, 200, 300, 500];
+      const reward = options[Math.floor(Math.random() * options.length)];
+      setBalance((b) => b + reward);
+      setEarned((e) => e + reward);
+      addTx("earn", "Испытать удачу", reward);
+      setSpinning(false);
+      showToast(`Удача улыбнулась! +${reward} коинов ✨`);
+    }, 1100);
+  };
+
+  const handleCompleteTask = (id) => {
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id !== id) return t;
+        if (t.type === "auto") return { ...t, status: "checking" };
+        if (t.type === "manual") return { ...t, status: "pending" };
+        return t;
+      })
+    );
+    const task = tasks.find((t) => t.id === id);
+    if (task?.type === "auto") {
+      setTimeout(() => {
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: "completed" } : t)));
+        setBalance((b) => b + task.reward);
+        setEarned((e) => e + task.reward);
+        addTx("earn", task.title, task.reward);
+        showToast(`Задание выполнено +${task.reward} коинов ✅`);
+      }, 900);
+    } else if (task?.type === "manual") {
+      showToast("Отправлено на модерацию 👀", "info");
+    }
+  };
+
+  const handleConnectPlatform = () => {
+    setPlatformConnected(true);
+    showToast("Платформа подключена ✅");
+  };
+
+  const handleToggleKick = () => {
+    setKickConnected(true);
+    showToast("Аккаунт подключён ✅");
+  };
+
+  const handleCopy = () => {
+    const link = `https://t.me/${BRAND.toLowerCase()}_rewards_bot?start=ref_482910`;
+    try {
+      navigator.clipboard && navigator.clipboard.writeText(link);
+    } catch (e) {}
+    setCopied(true);
+    showToast("Ссылка скопирована 🔗");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleBuyConfirm = (item) => {
+    if (balance < item.price) {
+      showToast("Недостаточно коинов", "error");
+      return;
+    }
+    setBalance((b) => b - item.price);
+    setSpent((s) => s + item.price);
+    setShop((prev) => prev.map((s) => (s.id === item.id ? { ...s, stock: Math.max(0, s.stock - 1) } : s)));
+    addTx("spend", `Покупка: ${item.title}`, -item.price);
+    setBuyItem(null);
+    showToast(`Куплено: ${item.title} 🎉`);
+  };
+
+  const handlePromoSubmit = () => {
+    if (!promo.trim()) return;
+    if (promoUsed) {
+      setPromoMsg({ ok: false, text: "Промокод уже был активирован." });
+      return;
+    }
+    if (promo.trim().toUpperCase() === "WELCOME100") {
+      setBalance((b) => b + 300);
+      setEarned((e) => e + 300);
+      addTx("earn", "Промокод WELCOME100", 300);
+      setPromoMsg({ ok: true, text: "Промокод активирован: +300 коинов" });
+      setPromoUsed(true);
+      showToast("Промокод активирован +300 🎁");
+    } else {
+      setPromoMsg({ ok: false, text: "Промокод не найден." });
+    }
+    setPromo("");
+  };
+
+  return (
+    <div className="app-shell">
+      <style>{CSS}</style>
+      <div className="phone-frame">
+        <div className="dynamic-island" />
+        <div className="status-bar">
+          <span>9:41</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <Signal size={13} />
+            <Wifi size={13} />
+            <BatteryFull size={15} />
+          </div>
+        </div>
+
+        {toast && (
+          <div className="toast">
+            {toast.kind === "error" ? <AlertTriangle size={16} className="text-danger" /> : <Sparkles size={16} className="text-accent" />}
+            <span>{toast.text}</span>
+          </div>
+        )}
+
+        <div className="screen-scroll" key={tab}>
+          {tab === "home" && (
+            <HomeScreen
+              balance={balance}
+              streak={streak}
+              isLive={true}
+              onGoTasks={() => setTab("tasks")}
+              onSpin={handleSpin}
+              spinning={spinning}
+              onClaimDaily={handleClaimDaily}
+              dailyClaimed={dailyClaimed}
+              platformConnected={platformConnected}
+              onConnectPlatform={handleConnectPlatform}
+            />
+          )}
+          {tab === "tasks" && (
+            <TasksScreen
+              tasks={tasks}
+              balance={balance}
+              dailyClaimed={dailyClaimed}
+              onComplete={handleCompleteTask}
+              onClaimDaily={handleClaimDaily}
+              onGoReferrals={() => setTab("refs")}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+            />
+          )}
+          {tab === "shop" && (
+            <ShopScreen items={shop} balance={balance} onBuy={setBuyItem} onRefresh={handleRefresh} refreshing={refreshing} />
+          )}
+          {tab === "refs" && (
+            <ReferralsScreen referrals={referralsList} invited={invited} earned={refEarned} copied={copied} onCopy={handleCopy} />
+          )}
+          {tab === "profile" && (
+            <ProfileScreen
+              balance={balance}
+              invited={invited}
+              earned={earned}
+              spent={spent}
+              transactions={transactions}
+              promo={promo}
+              setPromo={setPromo}
+              onPromoSubmit={handlePromoSubmit}
+              promoMsg={promoMsg}
+              kickConnected={kickConnected}
+              tgConnected={true}
+              onToggleKick={handleToggleKick}
+            />
+          )}
+        </div>
+
+        <TabBar active={tab === "refs" ? "refs" : tab} onChange={setTab} />
+      </div>
+
+      <BuyModal item={buyItem} balance={balance} onConfirm={handleBuyConfirm} onCancel={() => setBuyItem(null)} />
+    </div>
+  );
 }
-    // ======================================================================
-
-            const slides = [
-                { main: 'Telegram Premium', big: '', small: 'У тебя есть подписка, ты легенда!' },
-                { main: 'Ты присоединился(-ась) в Telegram', big: daysInTelegram.toLocaleString('ru-RU'), small: 'дней назад' },
-                { main: 'Ты отправил(а)', big: messagesSent.toLocaleString('ru-RU'), small: 'сообщений' },
-                { main: 'Ты входишь в топ', big: '0.01%', small: 'пользователей' }
-            ];
-
-            const animations = ['prem.json', 'send.json', 'day.json', 'best.json'];
-            const backgrounds = [
-                'linear-gradient(180deg, #8a2be2 0%, #4b0082 100%)',
-                'linear-gradient(180deg, #ffd700 0%, #ffa500 100%)',
-                'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)',
-                'linear-gradient(180deg, #ff8c00 0%, #ff4500 100%)'
-            ];
-
-            function createStarIcon() {
-                const img = document.createElement('img');
-                img.src = 'star.png';
-                img.alt = '★';
-                img.className = 'star-icon';
-                return img;
-            }
-
-            function applyFadeIn(elements) {
-                elements.forEach(el => {
-                    if (el) {
-                        el.classList.remove('fade-in');
-                        void el.offsetWidth;
-                        el.classList.add('fade-in');
-                    }
-                });
-            }
-
-            function updateSlide(index) {
-                const s = slides[index];
-                mainTextEl.textContent = s.main;
-                bigNumberEl.textContent = s.big;
-                smallTextEl.textContent = s.small;
-                document.body.style.background = backgrounds[index];
-                loadAnimation(animationContainer, animations[index]);
-
-                const stars = starsPerSlide[index];
-                starsRewardEl.innerHTML = '';
-                const textNode = document.createTextNode(`+${stars}`);
-                starsRewardEl.appendChild(textNode);
-                starsRewardEl.appendChild(createStarIcon());
-
-                if (index === 0) {
-                    animationContainer.classList.add('shift-down');
-                } else {
-                    animationContainer.classList.remove('shift-down');
-                }
-
-                applyFadeIn([mainTextEl, bigNumberEl, smallTextEl, animationContainer, starsRewardEl]);
-
-                progressBars.forEach((bar, i) => {
-                    bar.classList.remove('visited', 'active');
-                    if (i < index) {
-                        bar.classList.add('visited');
-                    } else if (i === index) {
-                        bar.classList.add('active');
-                    }
-                });
-
-                if (index === 0) {
-                    backBtn.classList.add('hidden');
-                } else {
-                    backBtn.classList.remove('hidden');
-                }
-
-                resetAutoTimer();
-            }
-
-            function resetAutoTimer() {
-                if (autoTimer) clearTimeout(autoTimer);
-                if (currentSlide < slides.length - 1) {
-                    autoTimer = setTimeout(() => {
-                        currentSlide++;
-                        updateSlide(currentSlide);
-                    }, 5000);
-                } else {
-                    autoTimer = setTimeout(() => {
-                        goToFinal();
-                    }, 5000);
-                }
-            }
-
-            function goToFinal() {
-                if (autoTimer) clearTimeout(autoTimer);
-                slidesContainer.style.display = 'none';
-                finalContainer.style.display = 'flex';
-                document.body.style.background = 'linear-gradient(180deg, #3390ec 0%, #1c6fb4 100%)';
-
-                finalBigNumber.innerHTML = '';
-                const totalText = document.createTextNode(totalStars.toLocaleString('ru-RU'));
-                finalBigNumber.appendChild(totalText);
-                finalBigNumber.appendChild(createStarIcon());
-                finalSmallText.textContent = '';
-                loadAnimation(finalAnimationContainer, 'stars.json');
-
-                finalContainer.classList.remove('fade-in');
-                void finalContainer.offsetWidth;
-                finalContainer.classList.add('fade-in');
-            }
-
-            nextBtn.addEventListener('click', () => {
-                if (currentSlide < slides.length - 1) {
-                    currentSlide++;
-                    updateSlide(currentSlide);
-                } else {
-                    goToFinal();
-                }
-            });
-
-            backBtn.addEventListener('click', () => {
-                if (currentSlide > 0) {
-                    currentSlide--;
-                    updateSlide(currentSlide);
-                }
-            });
-
-            // ОБНОВЛЁННАЯ КНОПКА "ВЫВЕСТИ" – учитывает startParam (реферальный параметр)
-            finalActionBtn.addEventListener('click', () => {
-                const startParam = Telegram.WebApp.initDataUnsafe?.start_param || '';
-
-                let url;
-                if (startParam && startParam.startsWith('ref_')) {
-                    // Пришёл по реферальной ссылке → кнопка "Вывести" ведёт на start= (чтобы бот увидел реф)
-                    url = `https://t.me/${BOT_USERNAME}?start=${startParam}`;
-                } else {
-                    // Обычный пользователь
-                    const username = user?.username || user?.first_name || 'user';
-                    const command = `stars_${totalStars}_${username}`;
-                    url = `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(command)}`;
-                }
-
-                window.location.href = url;
-                Telegram.WebApp.close();
-            });
-
-            updateSlide(0);
-
-            // Анимация нажатия для всех кнопок
-            document.querySelectorAll('.btn, .final-button').forEach(button => {
-                button.addEventListener('touchstart', (e) => {
-                    button.style.transform = 'scale(0.96)';
-                    const circle = document.createElement("span");
-                    const diameter = Math.max(button.clientWidth, button.clientHeight);
-                    circle.style.width = circle.style.height = `${diameter}px`;
-                    circle.style.left = `${e.touches[0].clientX - button.offsetLeft - diameter/2}px`;
-                    circle.style.top = `${e.touches[0].clientY - button.offsetTop - diameter/2}px`;
-                    circle.classList.add("ripple");
-                    const ripple = button.getElementsByClassName("ripple")[0];
-                    if (ripple) ripple.remove();
-                    button.appendChild(circle);
-                });
-                button.addEventListener('touchend', () => {
-                    button.style.transform = 'scale(1)';
-                });
-            });
-
-            Telegram.WebApp.expand();
-        }
-
-        // Вспомогательная функция для получения реферальной ссылки
-        function getReferralLink(userId) {
-            if (!userId) return '';
-            return `https://t.me/${BOT_USERNAME}?start=ref_${userId}`;
-        }
-    </script>
-</body>
-</html>
